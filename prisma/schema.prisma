@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CategoryType {
+  IDLE_CASH
+  HOT_CASH
+  EMERGENCY_FUND
+}
+
+model User {
+  id         String     @id @default(cuid())
+  email      String     @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  wallets    Wallet[]
+  categories Category[]
+  records    Record[]
+}
+
+model Category {
+  id        String       @id @default(cuid())
+  name      String
+  type      CategoryType
+  isDefault Boolean      @default(false)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  wallets   Wallet[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([name, userId])
+  @@index([userId])
+}
+
+model Wallet {
+  id         String     @id @default(cuid())
+  name       String
+  notes      String?
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id])
+
+  records    Record[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model Record {
+  id        String   @id @default(cuid())
+  amount    Decimal  @db.Decimal(15, 2)
+  date      DateTime
+  notes     String?
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([date])
+}
