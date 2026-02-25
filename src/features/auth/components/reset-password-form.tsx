@@ -2,40 +2,37 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { resetPassword } from '../api/auth-client'
 import { resetPasswordSchema, type ResetPasswordInput } from '../validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Field,
+  FieldLabel,
+  FieldError,
+} from '@/components/ui/field'
 
 export function ResetPasswordForm() {
-  const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   const {
-    register,
+    control,
     handleSubmit,
-    formState: { errors },
+    formState: { isSubmitting },
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
   })
 
   const onSubmit = async (data: ResetPasswordInput) => {
-    setError('')
-    setSuccess(false)
-    setLoading(true)
-
     try {
       await resetPassword(data)
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+      toast.error(err instanceof Error ? err.message : 'An error occurred')
     }
   }
 
@@ -49,28 +46,33 @@ export function ResetPasswordForm() {
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {error && <p className="text-sm text-destructive">{error}</p>}
           {success && (
             <p className="text-sm text-green-600">
               Check your email for the password reset link
             </p>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+          <Controller
+            name="email"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="email"
+                  placeholder="you@example.com"
+                  aria-invalid={fieldState.invalid}
+                  disabled={success}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
             )}
-          </div>
+          />
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={loading || success}>
-            {loading ? 'Sending...' : 'Send Reset Link'}
+          <Button type="submit" className="w-full" disabled={isSubmitting || success}>
+            {isSubmitting ? 'Sending...' : 'Send Reset Link'}
           </Button>
           <p className="text-sm text-center">
             Remember your password?{' '}

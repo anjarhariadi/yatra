@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Pencil, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import type { Wallet } from '../types'
@@ -8,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 interface WalletCardProps {
   wallet: Wallet & { currentBalance?: number }
   onDelete: (id: string) => void
+  onEdit: (id: string) => void
   isDeleting?: boolean
 }
 
-export function WalletCard({ wallet, onDelete, isDeleting }: WalletCardProps) {
+export function WalletCard({ wallet, onDelete, onEdit, isDeleting }: WalletCardProps) {
   const balance = wallet.currentBalance ?? 0
 
   return (
@@ -19,9 +19,7 @@ export function WalletCard({ wallet, onDelete, isDeleting }: WalletCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <CardTitle className="text-lg">
-            <Link href={`/accounts/${wallet.id}`} className="hover:underline">
-              {wallet.name}
-            </Link>
+            {wallet.name}
           </CardTitle>
           <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
             {wallet.category.name}
@@ -37,11 +35,9 @@ export function WalletCard({ wallet, onDelete, isDeleting }: WalletCardProps) {
           </p>
         )}
         <div className="flex gap-2 mt-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/accounts/${wallet.id}/edit`}>
-              <Pencil className="h-4 w-4 mr-1" />
-              Edit
-            </Link>
+          <Button variant="outline" size="sm" onClick={() => onEdit(wallet.id)}>
+            <Pencil className="h-4 w-4 mr-1" />
+            Edit
           </Button>
           <Button
             variant="outline"

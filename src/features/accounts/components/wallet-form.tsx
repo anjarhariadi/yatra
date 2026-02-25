@@ -1,116 +1,126 @@
 "use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { walletSchema, type WalletInput } from '../validation'
 import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Field,
+  FieldLabel,
+  FieldError,
+} from '@/components/ui/field'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-export function WalletForm() {
-  const router = useRouter()
+interface WalletFormProps {
+  onSuccess?: () => void
+}
+
+export function WalletForm({ onSuccess }: WalletFormProps) {
   const utils = trpc.useUtils()
-  const [error, setError] = useState('')
 
   const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery()
 
   const createMutation = trpc.accounts.create.useMutation({
     onSuccess: () => {
+      toast.success('Wallet created successfully')
       utils.accounts.getAll.invalidate()
-      router.push('/accounts')
-      router.refresh()
+      onSuccess?.()
     },
     onError: (err) => {
-      setError(err.message || 'An error occurred')
+      toast.error(err.message || 'An error occurred')
     },
   })
 
   const {
-    register,
+    control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
   })
 
   const onSubmit = async (data: WalletInput) => {
-    setError('')
-    try {
-      await createMutation.mutateAsync(data)
-    } catch {
-      // Error handled in onError
-    }
+    await createMutation.mutateAsync(data)
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Wallet</CardTitle>
-        <CardDescription>Add a new wallet to track your money</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="space-y-2">
-            <Label htmlFor="name">Wallet Name</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Controller
+        name="name"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Wallet Name</FieldLabel>
             <Input
-              id="name"
+              {...field}
+              id={field.name}
+              aria-invalid={fieldState.invalid}
               placeholder="e.g., Bank BCA, Cash, GoPay"
-              {...register('name')}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="categoryId">Category</Label>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="categoryId"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>Category</FieldLabel>
             {categoriesLoading ? (
               <div className="h-10 bg-muted animate-pulse rounded-md" />
             ) : (
-              <select
-                id="categoryId"
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-disabled disabled:opacity-50"
-                {...register('categoryId')}
-              >
-                <option value="">Select a category</option>
-                {categories?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="categoryId" aria-invalid={fieldState.invalid}>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
-            {errors.categoryId && (
-              <p className="text-sm text-destructive">{errors.categoryId.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="notes"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Notes (optional)</FieldLabel>
             <Textarea
-              id="notes"
+              {...field}
+              id={field.name}
+              aria-invalid={fieldState.invalid}
               placeholder="Add any notes about this wallet"
-              {...register('notes')}
             />
-            {errors.notes && (
-              <p className="text-sm text-destructive">{errors.notes.message}</p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" asChild>
-            <Link href="/accounts">Cancel</Link>
-          </Button>
-          <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
-            {createMutation.isPending ? 'Creating...' : 'Create Wallet'}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <div className="flex justify-end gap-2">
+        <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
+          {createMutation.isPending ? 'Creating...' : 'Create Wallet'}
+        </Button>
+      </div>
+    </form>
   )
 }

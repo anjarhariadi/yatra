@@ -6,7 +6,7 @@ This file provides guidance to Agents when working with code in this repository.
 
 ## Project Overview
 
-**Yatra** is a personal finance tracker web app for managing money across multiple wallets/accounts. Users periodically add balance records, and the app displays the latest balance as current. Features include category management (idle cash, hot cash, emergency fund), pie charts for distribution, line charts for history, and data export.
+**Yatra** is a personal finance tracker web application for managing money across multiple wallets/accounts. Users periodically add balance records, and the app displays the latest balance as current. Features include category management (idle cash, hot cash, emergency fund), pie charts for distribution, and line charts for history.
 
 ---
 
@@ -17,7 +17,10 @@ This file provides guidance to Agents when working with code in this repository.
 | Next.js 15 | React framework with App Router |
 | TypeScript | Type safety |
 | Prisma | ORM for database |
-| Supabase | Auth + PostgreSQL database |
+| tRPC | Type-safe API layer |
+| TanStack Query | Data fetching (via tRPC) |
+| Superjson | JSON serialization for tRPC |
+| Supabase Auth | User authentication |
 | shadcn/ui | Component library |
 | Tailwind CSS | Styling |
 | Recharts | Charts (pie, line) |
@@ -58,99 +61,85 @@ npx prisma studio      # Open Prisma Studio
 src/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/            # Auth routes (login, register)
-│   ├── (dashboard)/      # Protected routes
-│   │   ├── accounts/     # Wallet management
-│   │   ├── records/      # Balance records
-│   │   ├── categories/   # Category management
-│   │   ├── export/       # Data export
-│   │   └── page.tsx      # Dashboard
-│   └── api/              # API routes
-├── components/            # Shared components
-│   ├── ui/               # shadcn components
-│   ├── layout/           # Sidebar, header
-│   └── charts/           # Pie, line charts
-├── features/             # Feature-based organization
-│   ├── accounts/         # Wallet feature
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   └── types.ts
-│   ├── records/         # Balance record feature
-│   ├── categories/      # Category feature
-│   └── export/           # Export feature
-├── lib/                  # Utilities
-│   ├── supabase/         # Supabase client
-│   ├── prisma/           # Prisma client
+│   ├── (dashboard)/       # Protected routes
+│   │   ├── accounts/      # Wallet management
+│   │   ├── categories/    # Category management
+│   │   └── page.tsx       # Dashboard
+│   └── api/trpc/          # tRPC API handler
+├── components/             # Shared components
+│   ├── ui/                # shadcn components
+│   └── providers/         # tRPC provider
+├── features/              # Feature-based organization
+│   ├── accounts/          # Wallet feature
+│   │   ├── components/    # UI components
+│   │   ├── types.ts       # TypeScript types
+│   │   └── validation.ts  # Zod schemas
+│   ├── auth/              # Auth feature
+│   └── categories/        # Category feature
+├── lib/                   # Utilities
+│   ├── supabase/          # Supabase client
+│   ├── prisma/            # Prisma client
+│   ├── trpc/              # tRPC client
 │   └── utils.ts
-├── hooks/                # Global hooks
+├── server/                # tRPC server
+│   ├── context.ts         # createTRPCContext
+│   ├── trpc.ts            # tRPC initialization
+│   ├── index.ts           # Root router
+│   └── routers/           # Feature routers
 └── prisma/
-    └── schema.prisma     # Database schema
+    └── schema.prisma       # Database schema
 ```
 
 ---
 
 ## Architecture
 
-- **Feature-based**: All code (API, components, hooks, types) grouped by feature in `/src/features`
+- **Feature-based**: All code (components, types, validation) grouped by feature in `/src/features`
+- **tRPC API**: Type-safe API with routers in `/src/server/routers`
 - **App Router**: Next.js 15 with route groups `(auth)` and `(dashboard)`
-- **Server Actions**: Use for data mutations where appropriate
-- **RLS**: Row Level Security on all Supabase tables for data isolation
+- **Protected Procedures**: All database operations require authenticated user via tRPC middleware
 
 ---
 
 ## Code Patterns
 
 ### Naming Conventions
-- PascalCase for components and types: `AccountCard`, `WalletForm`
-- camelCase for functions and variables: `getAccounts`, `currentBalance`
-- kebab-case for file names: `account-card.tsx`, `use-accounts.ts`
+- PascalCase for components and types: `WalletCard`, `WalletForm`
+- camelCase for functions and variables: `getWallets`, `currentBalance`
+- kebab-case for file names: `wallet-card.tsx`, `use-accounts.ts`
 
 ### File Organization
-- Each feature has: `api/`, `components/`, `hooks/`, `types.ts`, `index.ts`
-- Shared components in `/components`
-- shadcn components in `/components/ui`
+- Each feature has: `components/`, `types.ts`, `validation.ts`
+- tRPC routers in `/src/server/routers/` organized by feature
+- API client via tRPC hooks (not direct function calls)
 
 ### Error Handling
 - Use Zod for form validation with descriptive error messages
-- Handle Supabase errors gracefully with user-friendly messages
-- Log errors appropriately without exposing sensitive data
+- tRPC mutations use `onError` callback for user-friendly messages
+- Use TRPCError with appropriate codes (NOT_FOUND, UNAUTHORIZED, etc.)
 
-### Database
-- Use `Decimal` type for money (never Float)
-- All tables have `userId` for RLS
-- Use Prisma transactions for atomic operations
+### tRPC Patterns
+- Define routers in `/src/server/routers/` with CRUD procedures
+- Use `protectedProcedure` for authenticated routes
+- Input validation via Zod schemas
+- Serialize dates/Decimal with superjson transformer
 
----
+### Form Patterns (shadcn/ui)
+- Use `<Controller>` instead of `register()` for controlled inputs
+- Use `<Field>`, `<FieldLabel>`, `<FieldError>` components for layout
+- Use shadcn `<Select>` instead of native `<select>`
+- Use Dialog modals for create/edit forms instead of separate pages
+- Add `aria-invalid` and `data-invalid` for accessibility
+- Use Sonner toast for notifications instead of alert() or setError
 
-## Validation
-
-```bash
-# Run lint
-npm run lint
-
-# Run type check
-npm run typecheck
-
-# Build (catches build errors)
-npm run build
-```
-
----
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `prisma/schema.prisma` | Database schema |
-| `src/lib/supabase/client.ts` | Supabase browser client |
-| `src/lib/supabase/server.ts` | Supabase server client |
-| `PRD.md` | Product Requirements Document |
+### Currency Handling
+- Currency: IDR (Indonesian Rupiah) - use Decimal type, never Float
 
 ---
 
 ## Notes
 
-- This is a new project - implementation hasn't started yet
-- User will create their own Supabase project
-- All data is private per user (RLS enforced)
-- Currency: IDR (Indonesian Rupiah)
+- All tRPC procedures use `protectedProcedure` - unauthenticated access throws UNAUTHORIZED
+- Prisma queries filter by `ctx.user.id` for data isolation
+- Supabase Auth provides JWT via cookies; tRPC context validates with `getUser()`
+- Forms use React Hook Form + Zod resolver for validation

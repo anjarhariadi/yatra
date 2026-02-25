@@ -2,23 +2,38 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { CategoryCard } from './category-card'
+import { CategoryForm } from './category-form'
+import { CategoryEditForm } from './category-edit-form'
 import { trpc } from '@/lib/trpc/client'
 
 export function CategoryList() {
   const router = useRouter()
   const utils = trpc.useUtils()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
 
   const { data: categories, isLoading } = trpc.categories.getAll.useQuery()
 
   const deleteMutation = trpc.categories.delete.useMutation({
     onSuccess: () => {
+      toast.success('Category deleted successfully')
       utils.categories.getAll.invalidate()
       router.refresh()
     },
     onError: (error) => {
-      alert(error.message || 'Failed to delete category')
+      toast.error(error.message || 'Failed to delete category')
     },
   })
 
@@ -35,6 +50,15 @@ export function CategoryList() {
     } finally {
       setDeletingId(null)
     }
+  }
+
+  const handleEdit = (id: string) => {
+    setEditId(id)
+  }
+
+  const handleEditSuccess = () => {
+    setEditId(null)
+    router.refresh()
   }
 
   if (isLoading) {
@@ -56,9 +80,25 @@ export function CategoryList() {
 
   if (!categories || categories.length === 0) {
     return (
-      <p className="text-muted-foreground text-center py-8">
-        No categories yet. Create one to get started.
-      </p>
+      <div className="space-y-4">
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Category</DialogTitle>
+            </DialogHeader>
+            <CategoryForm onSuccess={() => setCreateOpen(false)} />
+          </DialogContent>
+        </Dialog>
+        <p className="text-muted-foreground text-center py-8">
+          No categories yet. Create one to get started.
+        </p>
+      </div>
     )
   }
 
@@ -77,22 +117,51 @@ export function CategoryList() {
   }
 
   return (
-    <div className="space-y-8">
-      {Object.entries(groupedCategories).map(([type, typeCategories]) => (
-        <div key={type}>
-          <h2 className="text-lg font-semibold mb-4">{typeLabels[type]}</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {typeCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                onDelete={handleDelete}
-                isDeleting={deletingId === category.id}
-              />
-            ))}
+    <>
+      <div className="flex justify-end mb-4">
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Category</DialogTitle>
+            </DialogHeader>
+            <CategoryForm onSuccess={() => setCreateOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="space-y-8">
+        {Object.entries(groupedCategories).map(([type, typeCategories]) => (
+          <div key={type}>
+            <h2 className="text-lg font-semibold mb-4">{typeLabels[type]}</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {typeCategories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  isDeleting={deletingId === category.id}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+
+      <Dialog open={!!editId} onOpenChange={(open) => !open && setEditId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          {editId && <CategoryEditForm id={editId} onSuccess={handleEditSuccess} />}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
