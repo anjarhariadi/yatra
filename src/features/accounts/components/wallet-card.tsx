@@ -1,0 +1,60 @@
+import Link from 'next/link'
+import { Pencil, Trash2 } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
+import type { Wallet, WalletRecord } from '../types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+interface WalletCardProps {
+  wallet: Wallet
+  latestRecord?: WalletRecord | null
+  onDelete: (id: string) => void
+  isDeleting?: boolean
+}
+
+export function WalletCard({ wallet, latestRecord, onDelete, isDeleting }: WalletCardProps) {
+  const balance = latestRecord?.amount ?? 0
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg">
+            <Link href={`/accounts/${wallet.id}`} className="hover:underline">
+              {wallet.name}
+            </Link>
+          </CardTitle>
+          <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
+            {wallet.category.name}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold">{formatCurrency(balance)}</p>
+        <p className="text-sm text-muted-foreground">Current balance</p>
+        {wallet.notes && (
+          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+            {wallet.notes}
+          </p>
+        )}
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/accounts/${wallet.id}/edit`}>
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDelete(wallet.id)}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

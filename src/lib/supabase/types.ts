@@ -11,7 +11,7 @@ export type CategoryType = 'IDLE_CASH' | 'HOT_CASH' | 'EMERGENCY_FUND'
 export interface Database {
   public: {
     Tables: {
-      user: {
+      users: {
         Row: {
           id: string
           email: string
@@ -31,7 +31,7 @@ export interface Database {
           updated_at?: string
         }
       }
-      category: {
+      categories: {
         Row: {
           id: string
           name: string
@@ -60,7 +60,7 @@ export interface Database {
           updated_at?: string
         }
       }
-      wallet: {
+      wallets: {
         Row: {
           id: string
           name: string
@@ -89,7 +89,7 @@ export interface Database {
           updated_at?: string
         }
       }
-      record: {
+      records: {
         Row: {
           id: string
           amount: number

@@ -1,0 +1,58 @@
+import Link from 'next/link'
+import { Pencil, Trash2 } from 'lucide-react'
+import { CATEGORY_TYPE_LABELS, type Category } from '../types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+interface CategoryCardProps {
+  category: Category
+  onDelete: (id: string) => void
+  isDeleting?: boolean
+}
+
+export function CategoryCard({ category, onDelete, isDeleting }: CategoryCardProps) {
+  const walletCount = category._count?.wallets ?? 0
+  const canDelete = !category.isDefault && walletCount === 0
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg">{category.name}</CardTitle>
+          <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
+            {CATEGORY_TYPE_LABELS[category.type]}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          {walletCount} wallet{walletCount !== 1 ? 's' : ''}
+        </p>
+        {category.isDefault && (
+          <p className="text-xs text-muted-foreground mt-2">Default category</p>
+        )}
+        <div className="flex gap-2 mt-4">
+          {!category.isDefault && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/categories/${category.id}/edit`}>
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDelete(category.id)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
