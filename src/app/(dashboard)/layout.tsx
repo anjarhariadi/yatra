@@ -8,7 +8,8 @@ import {
   Receipt, 
   Tags, 
   Download, 
-  LogOut
+  LogOut,
+  User
 } from "lucide-react"
 
 export default async function DashboardLayout({
@@ -45,6 +46,14 @@ export default async function DashboardLayout({
           <h1 className="text-2xl font-bold">Yatra</h1>
           <p className="text-sm text-muted-foreground">Finance Tracker</p>
         </div>
+        {user && (
+          <div className="px-4 pb-4">
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/50">
+              <User className="h-4 w-4" />
+              <span className="text-sm truncate">{user.email}</span>
+            </div>
+          </div>
+        )}
         <nav className="flex-1 px-4 space-y-2">
           {navItems.map((item) => (
             <Link
