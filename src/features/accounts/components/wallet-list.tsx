@@ -3,16 +3,24 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { WalletCard } from './wallet-card'
-import { deleteWallet } from '../api/accounts-client'
-import type { Wallet } from '../types'
+import { trpc } from '@/lib/trpc/client'
 
-interface WalletListProps {
-  wallets: Wallet[]
-}
-
-export function WalletList({ wallets }: WalletListProps) {
+export function WalletList() {
   const router = useRouter()
+  const utils = trpc.useUtils()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const { data: wallets, isLoading } = trpc.accounts.getAll.useQuery()
+
+  const deleteMutation = trpc.accounts.delete.useMutation({
+    onSuccess: () => {
+      utils.accounts.getAll.invalidate()
+      router.refresh()
+    },
+    onError: (error) => {
+      alert(error.message || 'Failed to delete wallet')
+    },
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this wallet? All records will be deleted too.')) {
@@ -21,16 +29,25 @@ export function WalletList({ wallets }: WalletListProps) {
 
     setDeletingId(id)
     try {
-      await deleteWallet(id)
-      router.refresh()
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete wallet')
+      await deleteMutation.mutateAsync({ id })
+    } catch {
+      // Error handled in onError
     } finally {
       setDeletingId(null)
     }
   }
 
-  if (wallets.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-40 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    )
+  }
+
+  if (!wallets || wallets.length === 0) {
     return (
       <p className="text-muted-foreground text-center py-8">
         No wallets yet. Create one to get started.

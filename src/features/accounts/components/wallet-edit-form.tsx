@@ -1,55 +1,80 @@
 "use client"
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { updateWallet } from '../api/accounts-client'
 import { walletSchema, type WalletInput } from '../validation'
-import type { Category, Wallet } from '../types'
+import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface WalletEditFormProps {
-  wallet: Wallet
-  categories: Category[]
-}
-
-export function WalletEditForm({ wallet, categories }: WalletEditFormProps) {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
+export function WalletEditForm() {
+  const params = useParams()
+  const id = params.id as string
   const router = useRouter()
+  const utils = trpc.useUtils()
+  const [error, setError] = useState('')
+
+  const { data: wallet, isLoading: walletLoading } = trpc.accounts.getById.useQuery({ id })
+  const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery()
+
+  const updateMutation = trpc.accounts.update.useMutation({
+    onSuccess: () => {
+      utils.accounts.getAll.invalidate()
+      router.push('/accounts')
+      router.refresh()
+    },
+    onError: (err) => {
+      setError(err.message || 'An error occurred')
+    },
+  })
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
-    defaultValues: {
+    values: wallet ? {
       name: wallet.name,
       categoryId: wallet.categoryId,
       notes: wallet.notes || '',
-    },
+    } : undefined,
   })
 
   const onSubmit = async (data: WalletInput) => {
     setError('')
-    setLoading(true)
-
     try {
-      await updateWallet(wallet.id, data)
-      router.push('/accounts')
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+      await updateMutation.mutateAsync({ id, data })
+    } catch {
+      // Error handled in onError
     }
+  }
+
+  if (walletLoading || categoriesLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Wallet</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-10 bg-muted animate-pulse rounded-md" />
+            <div className="h-10 bg-muted animate-pulse rounded-md" />
+            <div className="h-20 bg-muted animate-pulse rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!wallet) {
+    return <p>Wallet not found</p>
   }
 
   return (
@@ -80,7 +105,7 @@ export function WalletEditForm({ wallet, categories }: WalletEditFormProps) {
               {...register('categoryId')}
             >
               <option value="">Select a category</option>
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -106,8 +131,8 @@ export function WalletEditForm({ wallet, categories }: WalletEditFormProps) {
           <Button variant="outline" asChild>
             <Link href="/accounts">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
+          <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </CardFooter>
       </form>

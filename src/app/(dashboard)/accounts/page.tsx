@@ -1,12 +1,9 @@
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
-import { getWallets } from '@/features/accounts'
 import { WalletList } from '@/features/accounts'
 import { Button } from '@/components/ui/button'
 
-export default async function AccountsPage() {
-  const wallets = await getWallets()
-
+export default function AccountsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -22,7 +19,7 @@ export default async function AccountsPage() {
         </Button>
       </div>
 
-      <WalletList wallets={wallets} />
+      <WalletList />
     </div>
   )
 }

@@ -1,55 +1,80 @@
 "use client"
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { updateCategory } from '../api/categories-client'
 import { categorySchema, type CategoryInput } from '../validation'
-import { CATEGORY_TYPE_LABELS, type CategoryType, type Category } from '../types'
+import { CATEGORY_TYPE_LABELS, type CategoryType } from '../types'
+import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface CategoryEditFormProps {
-  category: Category
-}
-
-export function CategoryEditForm({ category }: CategoryEditFormProps) {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
+export function CategoryEditForm() {
+  const params = useParams()
+  const id = params.id as string
   const router = useRouter()
+  const utils = trpc.useUtils()
+  const [error, setError] = useState('')
+
+  const { data: category, isLoading } = trpc.categories.getById.useQuery({ id })
+
+  const updateMutation = trpc.categories.update.useMutation({
+    onSuccess: () => {
+      utils.categories.getAll.invalidate()
+      router.push('/categories')
+      router.refresh()
+    },
+    onError: (err) => {
+      setError(err.message || 'An error occurred')
+    },
+  })
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
-    defaultValues: {
+    values: category ? {
       name: category.name,
       type: category.type,
-    },
+    } : undefined,
   })
 
   const onSubmit = async (data: CategoryInput) => {
     setError('')
-    setLoading(true)
-
     try {
-      await updateCategory(category.id, data)
-      router.push('/categories')
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+      await updateMutation.mutateAsync({ id, data })
+    } catch {
+      // Error handled in onError
     }
   }
 
   const categoryTypes: CategoryType[] = ['IDLE_CASH', 'HOT_CASH', 'EMERGENCY_FUND']
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Category</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-10 bg-muted animate-pulse rounded-md" />
+            <div className="h-10 bg-muted animate-pulse rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!category) {
+    return <p>Category not found</p>
+  }
 
   return (
     <Card>
@@ -93,8 +118,8 @@ export function CategoryEditForm({ category }: CategoryEditFormProps) {
           <Button variant="outline" asChild>
             <Link href="/categories">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
+          <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </CardFooter>
       </form>

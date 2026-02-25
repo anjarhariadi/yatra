@@ -1,19 +1,18 @@
 import Link from 'next/link'
 import { Pencil, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
-import type { Wallet, WalletRecord } from '../types'
+import type { Wallet } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface WalletCardProps {
-  wallet: Wallet
-  latestRecord?: WalletRecord | null
+  wallet: Wallet & { currentBalance?: number }
   onDelete: (id: string) => void
   isDeleting?: boolean
 }
 
-export function WalletCard({ wallet, latestRecord, onDelete, isDeleting }: WalletCardProps) {
-  const balance = latestRecord?.amount ?? 0
+export function WalletCard({ wallet, onDelete, isDeleting }: WalletCardProps) {
+  const balance = wallet.currentBalance ?? 0
 
   return (
     <Card>

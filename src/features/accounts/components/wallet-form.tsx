@@ -5,44 +5,46 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createWallet } from '../api/accounts-client'
 import { walletSchema, type WalletInput } from '../validation'
-import type { Category } from '../types'
+import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface WalletFormProps {
-  categories: Category[]
-}
-
-export function WalletForm({ categories }: WalletFormProps) {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
+export function WalletForm() {
   const router = useRouter()
+  const utils = trpc.useUtils()
+  const [error, setError] = useState('')
+
+  const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery()
+
+  const createMutation = trpc.accounts.create.useMutation({
+    onSuccess: () => {
+      utils.accounts.getAll.invalidate()
+      router.push('/accounts')
+      router.refresh()
+    },
+    onError: (err) => {
+      setError(err.message || 'An error occurred')
+    },
+  })
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
   })
 
   const onSubmit = async (data: WalletInput) => {
     setError('')
-    setLoading(true)
-
     try {
-      await createWallet(data)
-      router.push('/accounts')
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+      await createMutation.mutateAsync(data)
+    } catch {
+      // Error handled in onError
     }
   }
 
@@ -68,18 +70,22 @@ export function WalletForm({ categories }: WalletFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="categoryId">Category</Label>
-            <select
-              id="categoryId"
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-disabled disabled:opacity-50"
-              {...register('categoryId')}
-            >
-              <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            {categoriesLoading ? (
+              <div className="h-10 bg-muted animate-pulse rounded-md" />
+            ) : (
+              <select
+                id="categoryId"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-disabled disabled:opacity-50"
+                {...register('categoryId')}
+              >
+                <option value="">Select a category</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.categoryId && (
               <p className="text-sm text-destructive">{errors.categoryId.message}</p>
             )}
@@ -100,8 +106,8 @@ export function WalletForm({ categories }: WalletFormProps) {
           <Button variant="outline" asChild>
             <Link href="/accounts">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Wallet'}
+          <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
+            {createMutation.isPending ? 'Creating...' : 'Create Wallet'}
           </Button>
         </CardFooter>
       </form>

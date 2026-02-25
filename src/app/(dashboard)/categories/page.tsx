@@ -1,12 +1,9 @@
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
-import { getCategories } from '@/features/categories'
 import { CategoryList } from '@/features/categories'
 import { Button } from '@/components/ui/button'
 
-export default async function CategoriesPage() {
-  const categories = await getCategories()
-
+export default function CategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -22,11 +19,7 @@ export default async function CategoriesPage() {
         </Button>
       </div>
 
-      {categories.length === 0 ? (
-        <p className="text-muted-foreground">No categories yet. Create one to get started.</p>
-      ) : (
-        <CategoryList categories={categories} />
-      )}
+      <CategoryList />
     </div>
   )
 }

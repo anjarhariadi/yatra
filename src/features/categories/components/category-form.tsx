@@ -5,39 +5,44 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createCategory } from '../api/categories-client'
 import { categorySchema, type CategoryInput } from '../validation'
 import { CATEGORY_TYPE_LABELS, type CategoryType } from '../types'
+import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function CategoryForm() {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const utils = trpc.useUtils()
+  const [error, setError] = useState('')
+
+  const createMutation = trpc.categories.create.useMutation({
+    onSuccess: () => {
+      utils.categories.getAll.invalidate()
+      router.push('/categories')
+      router.refresh()
+    },
+    onError: (err) => {
+      setError(err.message || 'An error occurred')
+    },
+  })
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
   })
 
   const onSubmit = async (data: CategoryInput) => {
     setError('')
-    setLoading(true)
-
     try {
-      await createCategory(data)
-      router.push('/categories')
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+      await createMutation.mutateAsync(data)
+    } catch {
+      // Error handled in onError
     }
   }
 
@@ -86,8 +91,8 @@ export function CategoryForm() {
           <Button variant="outline" asChild>
             <Link href="/categories">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Category'}
+          <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
+            {createMutation.isPending ? 'Creating...' : 'Create Category'}
           </Button>
         </CardFooter>
       </form>

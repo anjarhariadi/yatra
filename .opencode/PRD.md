@@ -8,7 +8,7 @@
 
 **Yatra** is a personal finance tracker web application designed for individual users to manage their money across multiple wallets/accounts. The application allows users to periodically record their current balance for each wallet, providing a clear historical view of their financial status. With category-based organization (idle cash, hot cash, emergency fund) and visualization features including pie charts for distribution and line charts for history tracking, users gain insights into their financial health.
 
-The MVP focuses on simplicity—users simply add balance records with dates, and the app displays the latest balance as the current balance. Built with Next.js 15, Prisma, tRPC, Supabase Auth, and shadcn/ui, the application ensures a modern, secure, and performant user experience with type-safe API communication and centralized authorization via tRPC middleware.
+The MVP focuses on simplicity—users simply add balance records with dates, and the app displays the latest balance as the current balance. Built with Next.js 15, Prisma, Supabase, and shadcn/ui, the application ensures a modern, secure, and performant user experience with Row Level Security (RLS) for data privacy.
 
 ---
 
@@ -19,11 +19,10 @@ Enable individuals to effortlessly track their financial balance history across 
 
 ### Core Principles
 1. **Simplicity First** - Minimal friction in recording balances; just add the current amount and date
-2. **Privacy by Default** - All data is private and protected by tRPC middleware authorization
+2. **Privacy by Default** - All data is private and protected by Row Level Security
 3. **Clarity Over Complexity** - Current balance is always the latest recorded value
 4. **Insightful Visualization** - Users can see distribution and trends at a glance
 5. **Data Ownership** - Users can export their data anytime in standard formats
-6. **Type-Safe API** - End-to-end type safety from database to frontend with tRPC
 
 ---
 
@@ -78,8 +77,7 @@ Enable individuals to effortlessly track their financial balance history across 
 | Prisma ORM with PostgreSQL | ✅ |
 | Supabase Auth | ✅ |
 | Supabase Database | ✅ |
-| tRPC for type-safe API | ✅ |
-| tRPC middleware for authorization | ✅ |
+| Row Level Security (RLS) | ✅ |
 | shadcn/ui components | ✅ |
 | Feature-based folder structure | ✅ |
 | Environment variable configuration | ✅ |
@@ -139,7 +137,7 @@ Enable individuals to effortlessly track their financial balance history across 
 
 **TUS-1: Data Isolation**
 > As a system, I want to ensure users can only see their own data, so that privacy is maintained.
-> - *Implementation*: tRPC middleware validates user session; all queries filtered by `userId` from authenticated context
+> - *Implementation*: Supabase RLS policies on all tables
 
 **TUS-2: Input Validation**
 > As a system, I want to validate all user inputs, so that data integrity is maintained.
@@ -154,32 +152,24 @@ Enable individuals to effortlessly track their financial balance history across 
 ┌─────────────────────────────────────────────────────────────┐
 │                      Next.js 15 App Router                    │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   (auth)    │  │ (dashboard) │  │      tRPC API       │  │
-│  │  /login     │  │  /accounts  │  │  /api/trpc/[trpc]  │  │
-│  │  /register  │  │  /records   │  │                     │  │
-│  │             │  │  /categories│  │  - accounts.*       │  │
-│  │             │  │  /export    │  │  - categories.*     │  │
+│  │   (auth)    │  │ (dashboard) │  │      API Routes     │  │
+│  │  /login     │  │  /accounts  │  │  /api/accounts      │  │
+│  │  /register  │  │  /records   │  │  /api/records       │  │
+│  │             │  │  /categories│  │  /api/categories    │  │
+│  │             │  │  /export    │  │  /api/export        │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       tRPC Layer                              │
-│  - Type-safe API with Zod validation                         │
-│  - Middleware for Supabase auth verification                 │
-│  - Feature-based routers (accounts, categories)              │
-└─────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
+                              │
+                              ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Prisma ORM Layer                          │
-│         (Type-safe database queries)                        │
+│         (Type-safe database access & queries)               │
 └─────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
+                              │
+                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 Supabase PostgreSQL + Auth                    │
-│         (Database hosting + Authentication)                  │
+│                 Supabase PostgreSQL + Auth                   │
+│         (Database + Row Level Security)                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -206,33 +196,21 @@ src/
 │   │   │   └── page.tsx          # Export data
 │   │   ├── layout.tsx            # Dashboard layout (sidebar)
 │   │   └── page.tsx              # Dashboard home
-│   ├── api/
-│   │   └── trpc/
-│   │       └── [trpc]/
-│   │           └── route.ts      # tRPC API handler
-│   ├── auth/callback/
-│   │   └── route.ts              # Supabase auth callback
+│   ├── api/                      # API routes
 │   ├── layout.tsx                # Root layout
 │   └── globals.css               # Global styles
-├── server/                       # tRPC server
-│   ├── context.ts                # createTRPCContext (Supabase auth)
-│   ├── trpc.ts                  # tRPC initialization & procedures
-│   ├── index.ts                  # Root router
-│   └── routers/                  # Feature routers
-│       ├── accounts.ts           # Wallet CRUD
-│       └── categories.ts        # Category CRUD
 ├── components/                   # Shared components
 │   ├── ui/                       # shadcn components
 │   ├── layout/                   # Layout components
 │   │   ├── sidebar.tsx
 │   │   └── header.tsx
-│   ├── charts/                   # Chart components
-│   │   ├── pie-chart.tsx
-│   │   └── line-chart.tsx
-│   └── providers/
-│       └── trpc-provider.tsx     # tRPC client provider
+│   └── charts/                   # Chart components
+│       ├── pie-chart.tsx
+│       └── line-chart.tsx
 ├── features/                     # Feature-based organization
 │   ├── accounts/
+│   │   ├── api/                  # API functions
+│   │   │   └── accounts.ts
 │   │   ├── components/           # Feature components
 │   │   │   ├── account-card.tsx
 │   │   │   ├── account-form.tsx
@@ -242,6 +220,8 @@ src/
 │   │   ├── types.ts              # TypeScript types
 │   │   └── index.ts              # Exports
 │   ├── records/
+│   │   ├── api/
+│   │   │   └── records.ts
 │   │   ├── components/
 │   │   │   ├── record-form.tsx
 │   │   │   └── record-history.tsx
@@ -250,6 +230,8 @@ src/
 │   │   ├── types.ts
 │   │   └── index.ts
 │   ├── categories/
+│   │   ├── api/
+│   │   │   └── categories.ts
 │   │   ├── components/
 │   │   │   ├── category-form.tsx
 │   │   │   └── category-list.tsx
@@ -258,6 +240,8 @@ src/
 │   │   ├── types.ts
 │   │   └── index.ts
 │   └── export/
+│       ├── api/
+│       │   └── export.ts
 │       ├── components/
 │       │   └── export-buttons.tsx
 │       ├── types.ts
@@ -269,10 +253,11 @@ src/
 │   │   └── types.ts              # Supabase types
 │   ├── prisma/
 │   │   └── client.ts             # Prisma client
-│   └── utils.ts                  # Utility functions
+│   ├── utils.ts                  # Utility functions
+│   └── validation.ts            # Zod schemas
 ├── hooks/                        # Global hooks
 │   ├── use-auth.ts
-│   └── use-current-user.ts
+│   └── └── use-current-user.ts
 ├── types/                        # Global types
 └── prisma/
     └── schema.prisma              # Database schema
@@ -280,12 +265,11 @@ src/
 
 ### Key Design Patterns
 
-1. **Feature-Based Architecture**: All related code (routers, components, hooks, types) grouped by feature
-2. **tRPC for API**: Type-safe API layer with automatic type generation from server to client
-3. **Supabase Auth in Context**: Auth validation in tRPC context via `@supabase/ssr`, user passed to procedures
-4. **Prisma for Database**: All database queries use Prisma ORM, filtered by authenticated user's ID
-5. **TanStack Query**: Powered by tRPC's React Query integration for data fetching and caching
-6. **Zod Validation**: Schema validation for all tRPC inputs using existing Zod schemas
+1. **Feature-Based Architecture**: All related code (API, components, hooks, types) grouped by feature
+2. **Server Actions**: Use Next.js Server Actions for data mutations where appropriate
+3. **TanStack Query**: For client-side data fetching and caching (optional, can use Server Components)
+4. **Zustand**: For UI state management (optional)
+5. **Zod Validation**: Schema validation for all forms and API inputs
 
 ---
 
@@ -342,9 +326,6 @@ src/
 | React | 19.x | UI library |
 | TypeScript | 5.x | Type safety |
 | Prisma | 6.x | ORM for database |
-| tRPC | 11.x | Type-safe API layer |
-| TanStack Query | 5.x | Data fetching (via tRPC) |
-| Superjson | latest | JSON serialization for tRPC |
 | Supabase | Latest | Auth + Database |
 
 ### UI & Styling
@@ -368,6 +349,7 @@ src/
 
 | Technology | Purpose |
 |------------|---------|
+| TanStack Query | Server state caching |
 | Zustand | Client state management |
 | date-fns | Date utilities |
 
@@ -380,32 +362,24 @@ src/
 
 ### Authentication Approach
 - Supabase Auth with email/password
-- JWT-based session management via cookies
+- JWT-based session management
 - Protected routes via Next.js middleware
-- tRPC middleware validates user session for all API calls
-
-### Authorization Approach (tRPC)
-- All tRPC procedures require authenticated user
-- `protectedProcedure` middleware checks `ctx.user` exists
-- All Prisma queries filtered by `ctx.user.id` for data isolation
-- No reliance on database-level RLS (handled at application layer)
 
 ### Configuration Management
 ```env
 # Required environment variables
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANONanon_key
-DAT_KEY=your_ABASE_URL=postgresql://...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+DATABASE_URL=postgresql://...
 ```
 
 ### Security Scope
 
 **In Scope:**
-- tRPC middleware authorization (user validation on every API call)
-- Prisma queries filtered by authenticated user ID
-- Password hashing (handled by Supabase)
+- Row Level Security on all tables
+- Password hashinghandled by Supabase)
 - Input validation with Zod
-- HTTPS in production
+ (- HTTPS in production
 
 **Out of Scope:**
 - Two-factor authentication (future)
@@ -477,24 +451,22 @@ model Wallet {
 }
 
 model Record {
-  id          String   @id @default(cuid())
-  amount      Decimal  @db.Decimal(15, 2)
+  id          String     @id @default(cuid())
+  amount      Decimal    @db.Decimal(15, 2)
   date        DateTime
   notes       String?
   walletId    String
-  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet      Wallet     @relation(fields: [walletId], references: [id], onDelete: Cascade)
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
   
   @@index([userId])
   @@index([walletId])
   @@index([date])
 }
 ```
-
-> **Note**: Row Level Security (RLS) is not required as data isolation is handled at the application layer via tRPC middleware and Prisma queries filtered by `userId`.
 
 ### RLS Policies (to be applied in Supabase)
 
@@ -515,81 +487,47 @@ CREATE POLICY "Users can insert own categories" ON categories FOR INSERT WITH CH
 
 ## 11. API Specification
 
-### tRPC Router Overview
+### API | Endpoint | Description Routes Overview
 
-All API endpoints are exposed via tRPC with the following structure:
-
-| Procedure | Type | Description |
-|-----------|------|-------------|
-| `accounts.getAll` | query | List all wallets for authenticated user |
-| `accounts.getById` | query | Get single wallet by ID |
-| `accounts.create` | mutation | Create new wallet |
-| `accounts.update` | mutation | Update wallet |
-| `accounts.delete` | mutation | Delete wallet |
-| `accounts.getRecords` | query | Get balance records for a wallet |
-| `accounts.getLatestRecord` | query | Get latest balance record for a wallet |
-| `categories.getAll` | query | List all categories |
-| `categories.getById` | query | Get single category by ID |
-| `categories.create` | mutation | Create new category |
-| `categories.update` | mutation | Update category |
-| `categories.delete` | mutation | Delete category |
-
-### API Handler
-
-```
-POST /api/trpc/[trpc]
-```
-
-All requests go to the tRPC handler which:
-1. Validates authentication via Supabase session
-2. Creates context with `user` object
-3. Routes to appropriate procedure
-4. Returns type-safe response
-
-### tRPC Context Structure
-
-```typescript
-interface Context {
-  db: PrismaClient
-  user: {
-    id: string
-    email: string
-  } | null
-}
-```
-
-### Protected Procedure Middleware
-
-```typescript
-const isAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
-  return next({ ctx: { user: ctx.user } })
-})
-
-const protectedProcedure = t.procedure.use(isAuthed)
-```
+| Method |
+|--------|----------|-------------|
+| GET | /api/accounts | List all wallets |
+| POST | /api/ |
+| GET |accounts | Create wallet /api/accounts/[id] | Get wallet detail |
+| PUT | /api/accounts/[id] | Update wallet |
+| DELETE | /api/accounts/[id] | Delete wallet |
+| GET | /api/records | List records (with filters) |
+| POST | /api/records | Create record |
+| GET | /api/records/[id] | Get record |
+| DELETE | /api/records/[id] | Delete record |
+| GET | /api/categories | List categories |
+| POST | /api/categories | Create category |
+| PUT | /api/categories/[id] | Update category |
+| DELETE | /api/categories/[id] | Delete category |
+| GET | /api/export/csv | Export data as CSV |
+| GET | /api/export/json | Export data as JSON |
 
 ### Request/Response Examples
 
 **Create Wallet**
-```typescript
-// Mutation: accounts.create
-const input = {
-  name: "BNI Savings",
-  categoryId: "cat_abc123",
-  notes: "Primary savings account"
+```json
+// POST /api/accounts
+{
+  "name": "BNI Savings",
+  "categoryId": "cat_abc123",
+  "notes": "Primary savings account"
 }
-
-// Returns: Wallet object with relations
 ```
 
-**List Wallets**
-```typescript
-// Query: accounts.getAll
-
-// Returns: Wallet[] with category relations
+**Add Balance Record**
+```json
+// POST /api/records
+{
+  "walletId": "wallet_xyz789",
+  "amount": 5000000,
+  "date": "2026-02-25T00:00:00Z",
+  "notes": "Monthly balance check"
+}
 ```
 
 ---
@@ -756,13 +694,11 @@ const input = {
 |---------|------|
 | Next.js | https://nextjs.org |
 | Prisma | https://prisma.io |
-| tRPC | https://trpc.io |
 | Supabase | https://supabase.com |
 | shadcn/ui | https://ui.shadcn.com |
 | Recharts | https://recharts.org |
 | React Hook Form | https://react-hook-form.com |
 | Zod | https://zod.dev |
-| Superjson | https://superjson.pl |
 
 ### Environment Variables Template
 

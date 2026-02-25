@@ -3,16 +3,24 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CategoryCard } from './category-card'
-import { deleteCategory } from '../api/categories-client'
-import type { Category } from '../types'
+import { trpc } from '@/lib/trpc/client'
 
-interface CategoryListProps {
-  categories: Category[]
-}
-
-export function CategoryList({ categories }: CategoryListProps) {
+export function CategoryList() {
   const router = useRouter()
+  const utils = trpc.useUtils()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const { data: categories, isLoading } = trpc.categories.getAll.useQuery()
+
+  const deleteMutation = trpc.categories.delete.useMutation({
+    onSuccess: () => {
+      utils.categories.getAll.invalidate()
+      router.refresh()
+    },
+    onError: (error) => {
+      alert(error.message || 'Failed to delete category')
+    },
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this category?')) {
@@ -21,13 +29,37 @@ export function CategoryList({ categories }: CategoryListProps) {
 
     setDeletingId(id)
     try {
-      await deleteCategory(id)
-      router.refresh()
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete category')
+      await deleteMutation.mutateAsync({ id })
+    } catch {
+      // Error handled in onError
     } finally {
       setDeletingId(null)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i}>
+            <div className="h-6 w-32 bg-muted animate-pulse mb-4 rounded" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2].map((j) => (
+                <div key={j} className="h-32 bg-muted animate-pulse rounded-lg" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (!categories || categories.length === 0) {
+    return (
+      <p className="text-muted-foreground text-center py-8">
+        No categories yet. Create one to get started.
+      </p>
+    )
   }
 
   const groupedCategories = categories.reduce((acc, category) => {
@@ -36,7 +68,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     }
     acc[category.type].push(category)
     return acc
-  }, {} as Record<string, Category[]>)
+  }, {} as Record<string, typeof categories>)
 
   const typeLabels: Record<string, string> = {
     IDLE_CASH: 'Idle Cash',
