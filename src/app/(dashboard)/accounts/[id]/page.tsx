@@ -131,7 +131,7 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
         Back to Accounts
       </Button>
 
-      <div className="flex items-start justify-between">
+      <div className="flex gap-4 items-start justify-between">
         <div className="flex items-center gap-4">
           {wallet.imageUrl ? (
             <div className="relative w-16 h-16 rounded-md overflow-hidden">
@@ -154,7 +154,7 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-col sm:flex-row">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-4 w-4 mr-1" />
             Edit
