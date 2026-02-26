@@ -50,6 +50,9 @@ export const accountsRouter = createTRPCRouter({
           orderBy: [{ date: "desc" }, { createdAt: "desc" }],
           take: 1,
         },
+        _count: {
+          select: { records: true },
+        },
       },
       orderBy: {
         name: "asc",
@@ -77,6 +80,9 @@ export const accountsRouter = createTRPCRouter({
       currentBalance: wallet.records[0]?.amount
         ? Number(wallet.records[0].amount)
         : 0,
+      _count: {
+        records: wallet._count.records,
+      },
     }));
   }),
 

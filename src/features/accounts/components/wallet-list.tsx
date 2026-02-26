@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -14,52 +12,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { WalletCard } from './wallet-card'
 import { WalletForm } from './wallet-form'
-import { WalletEditForm } from './wallet-edit-form'
 import { trpc } from '@/lib/trpc/client'
 
 export function WalletList() {
-  const router = useRouter()
-  const utils = trpc.useUtils()
-  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
 
   const { data: wallets, isLoading } = trpc.accounts.getAll.useQuery()
-
-  const deleteMutation = trpc.accounts.delete.useMutation({
-    onSuccess: () => {
-      toast.success('Wallet deleted successfully')
-      utils.accounts.getAll.invalidate()
-      router.refresh()
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to delete wallet')
-    },
-  })
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this wallet? All records will be deleted too.')) {
-      return
-    }
-
-    setDeletingId(id)
-    try {
-      await deleteMutation.mutateAsync({ id })
-    } catch {
-      // Error handled in onError
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
-  const handleEdit = (id: string) => {
-    setEditId(id)
-  }
-
-  const handleEditSuccess = () => {
-    setEditId(null)
-    router.refresh()
-  }
 
   if (isLoading) {
     return (
@@ -119,21 +77,9 @@ export function WalletList() {
           <WalletCard
             key={wallet.id}
             wallet={wallet}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            isDeleting={deletingId === wallet.id}
           />
         ))}
       </div>
-
-      <Dialog open={!!editId} onOpenChange={(open) => !open && setEditId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Wallet</DialogTitle>
-          </DialogHeader>
-          {editId && <WalletEditForm id={editId} onSuccess={handleEditSuccess} />}
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

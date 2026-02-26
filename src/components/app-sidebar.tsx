@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Wallet,
-  Receipt,
   Tags,
   Download,
   LogOut,
