@@ -1,10 +1,16 @@
 import { Pencil, Trash2 } from 'lucide-react'
-import { CATEGORY_TYPE_LABELS, type Category } from '../types'
+import { CATEGORY_TYPE_LABELS, type CategoryType } from '../validation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface CategoryCardProps {
-  category: Category
+  category: {
+    id: string
+    name: string
+    type: CategoryType
+    isDefault: boolean
+    _count?: { wallets: number }
+  }
   onDelete: (id: string) => void
   onEdit: (id: string) => void
   isDeleting?: boolean

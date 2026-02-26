@@ -47,6 +47,11 @@ export function WalletForm({ onSuccess }: WalletFormProps) {
     formState: { isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
+    defaultValues: {
+      name: '',
+      categoryId: '',
+      notes: '',
+    }
   })
 
   const onSubmit = async (data: WalletInput) => {

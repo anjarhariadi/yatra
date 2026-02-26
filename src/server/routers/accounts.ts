@@ -1,9 +1,9 @@
-import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
-import { walletSchema } from '@/features/accounts/validation'
-import { TRPCError } from '@trpc/server'
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { walletSchema } from "@/features/accounts/validation";
+import { TRPCError } from "@trpc/server";
 
-export const accountsRouter = router({
+export const accountsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const wallets = await ctx.db.wallet.findMany({
       where: {
@@ -12,14 +12,14 @@ export const accountsRouter = router({
       include: {
         category: true,
         records: {
-          orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
           take: 1,
         },
       },
       orderBy: {
-        name: 'asc',
+        name: "asc",
       },
-    })
+    });
 
     return wallets.map((wallet) => ({
       id: wallet.id,
@@ -38,8 +38,10 @@ export const accountsRouter = router({
       },
       createdAt: wallet.createdAt.toISOString(),
       updatedAt: wallet.updatedAt.toISOString(),
-      currentBalance: wallet.records[0]?.amount ? Number(wallet.records[0].amount) : 0,
-    }))
+      currentBalance: wallet.records[0]?.amount
+        ? Number(wallet.records[0].amount)
+        : 0,
+    }));
   }),
 
   getById: protectedProcedure
@@ -53,16 +55,16 @@ export const accountsRouter = router({
         include: {
           category: true,
           records: {
-            orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+            orderBy: [{ date: "desc" }, { createdAt: "desc" }],
           },
         },
-      })
+      });
 
       if (!wallet) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Wallet not found',
-        })
+          code: "NOT_FOUND",
+          message: "Wallet not found",
+        });
       }
 
       return {
@@ -88,11 +90,12 @@ export const accountsRouter = router({
           date: r.date.toISOString(),
           notes: r.notes,
           walletId: r.walletId,
-          userId: r.userId,
           createdAt: r.createdAt.toISOString(),
         })),
-        currentBalance: wallet.records[0]?.amount ? Number(wallet.records[0].amount) : 0,
-      }
+        currentBalance: wallet.records[0]?.amount
+          ? Number(wallet.records[0].amount)
+          : 0,
+      };
     }),
 
   create: protectedProcedure
@@ -103,13 +106,13 @@ export const accountsRouter = router({
           id: input.categoryId,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (!category) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Category not found',
-        })
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
 
       const wallet = await ctx.db.wallet.create({
@@ -122,7 +125,7 @@ export const accountsRouter = router({
         include: {
           category: true,
         },
-      })
+      });
 
       return {
         id: wallet.id,
@@ -141,7 +144,7 @@ export const accountsRouter = router({
         },
         createdAt: wallet.createdAt.toISOString(),
         updatedAt: wallet.updatedAt.toISOString(),
-      }
+      };
     }),
 
   update: protectedProcedure
@@ -149,7 +152,7 @@ export const accountsRouter = router({
       z.object({
         id: z.string(),
         data: walletSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.wallet.findFirst({
@@ -157,13 +160,13 @@ export const accountsRouter = router({
           id: input.id,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (!existing) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Wallet not found',
-        })
+          code: "NOT_FOUND",
+          message: "Wallet not found",
+        });
       }
 
       if (input.data.categoryId) {
@@ -172,13 +175,13 @@ export const accountsRouter = router({
             id: input.data.categoryId,
             userId: ctx.user!.id,
           },
-        })
+        });
 
         if (!category) {
           throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Category not found',
-          })
+            code: "NOT_FOUND",
+            message: "Category not found",
+          });
         }
       }
 
@@ -194,7 +197,7 @@ export const accountsRouter = router({
         include: {
           category: true,
         },
-      })
+      });
 
       return {
         id: wallet.id,
@@ -213,7 +216,7 @@ export const accountsRouter = router({
         },
         createdAt: wallet.createdAt.toISOString(),
         updatedAt: wallet.updatedAt.toISOString(),
-      }
+      };
     }),
 
   delete: protectedProcedure
@@ -224,21 +227,21 @@ export const accountsRouter = router({
           id: input.id,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (!existing) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Wallet not found',
-        })
+          code: "NOT_FOUND",
+          message: "Wallet not found",
+        });
       }
 
       await ctx.db.wallet.delete({
         where: {
           id: input.id,
         },
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     }),
-})
+});

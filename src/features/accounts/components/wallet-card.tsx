@@ -1,11 +1,16 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
-import type { Wallet } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface WalletCardProps {
-  wallet: Wallet & { currentBalance?: number }
+  wallet: {
+    id: string
+    name: string
+    notes: string | null
+    category: { name: string }
+    currentBalance?: number
+  }
   onDelete: (id: string) => void
   onEdit: (id: string) => void
   isDeleting?: boolean

@@ -25,6 +25,10 @@ export function NewPasswordForm() {
     formState: { isSubmitting },
   } = useForm<NewPasswordInput>({
     resolver: zodResolver(newPasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    }
   })
 
   const onSubmit = async (data: NewPasswordInput) => {

@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '../trpc'
+import { createTRPCRouter, protectedProcedure } from '../trpc'
 import { categorySchema } from '@/features/categories/validation'
 import { TRPCError } from '@trpc/server'
 
-export const categoriesRouter = router({
+export const categoriesRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const categories = await ctx.db.category.findMany({
       where: {

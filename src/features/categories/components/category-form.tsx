@@ -1,43 +1,43 @@
-"use client"
+"use client";
 
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { categorySchema, type CategoryInput } from '../validation'
-import { CATEGORY_TYPE_LABELS, type CategoryType } from '../types'
-import { trpc } from '@/lib/trpc/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '@/components/ui/field'
+  categorySchema,
+  categoryTypes,
+  type CategoryInput,
+} from "../validation";
+import { CATEGORY_TYPE_LABELS } from "../validation";
+import { trpc } from "@/lib/trpc/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 interface CategoryFormProps {
-  onSuccess?: () => void
+  onSuccess?: () => void;
 }
 
 export function CategoryForm({ onSuccess }: CategoryFormProps) {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   const createMutation = trpc.categories.create.useMutation({
     onSuccess: () => {
-      toast.success('Category created successfully')
-      utils.categories.getAll.invalidate()
-      onSuccess?.()
+      toast.success("Category created successfully");
+      utils.categories.getAll.invalidate();
+      onSuccess?.();
     },
     onError: (err) => {
-      toast.error(err.message || 'An error occurred')
+      toast.error(err.message || "An error occurred");
     },
-  })
+  });
 
   const {
     control,
@@ -45,13 +45,15 @@ export function CategoryForm({ onSuccess }: CategoryFormProps) {
     formState: { isSubmitting },
   } = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
-  })
+    defaultValues: {
+      name: "",
+      type: "HOT_CASH",
+    },
+  });
 
   const onSubmit = async (data: CategoryInput) => {
-    await createMutation.mutateAsync(data)
-  }
-
-  const categoryTypes: CategoryType[] = ['IDLE_CASH', 'HOT_CASH', 'EMERGENCY_FUND']
+    await createMutation.mutateAsync(data);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -65,7 +67,7 @@ export function CategoryForm({ onSuccess }: CategoryFormProps) {
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
-              placeholder="e.g., Bank BCA, GoPay, Cash"
+              placeholder="e.g., Bank, EWallet, Cash"
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -96,10 +98,13 @@ export function CategoryForm({ onSuccess }: CategoryFormProps) {
       />
 
       <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
-          {createMutation.isPending ? 'Creating...' : 'Create Category'}
+        <Button
+          type="submit"
+          disabled={isSubmitting || createMutation.isPending}
+        >
+          {createMutation.isPending ? "Creating..." : "Create Category"}
         </Button>
       </div>
     </form>
-  )
+  );
 }

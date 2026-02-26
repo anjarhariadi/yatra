@@ -1,46 +1,44 @@
-"use client"
+"use client";
 
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { categorySchema, type CategoryInput } from '../validation'
-import { CATEGORY_TYPE_LABELS, type CategoryType } from '../types'
-import { trpc } from '@/lib/trpc/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '@/components/ui/field'
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { categorySchema, type CategoryInput } from "../validation";
+import { CATEGORY_TYPE_LABELS, type CategoryType } from "../validation";
+import { trpc } from "@/lib/trpc/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 interface CategoryEditFormProps {
-  id: string
-  onSuccess?: () => void
+  id: string;
+  onSuccess?: () => void;
 }
 
 export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
-  const { data: category, isLoading } = trpc.categories.getById.useQuery({ id })
+  const { data: category, isLoading } = trpc.categories.getById.useQuery({
+    id,
+  });
 
   const updateMutation = trpc.categories.update.useMutation({
     onSuccess: () => {
-      toast.success('Category updated successfully')
-      utils.categories.getAll.invalidate()
-      onSuccess?.()
+      toast.success("Category updated successfully");
+      utils.categories.getAll.invalidate();
+      onSuccess?.();
     },
     onError: (err) => {
-      toast.error(err.message || 'An error occurred')
+      toast.error(err.message || "An error occurred");
     },
-  })
+  });
 
   const {
     control,
@@ -48,17 +46,23 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
     formState: { isSubmitting },
   } = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
-    values: category ? {
-      name: category.name,
-      type: category.type,
-    } : undefined,
-  })
+    values: category
+      ? {
+          name: category.name,
+          type: category.type,
+        }
+      : undefined,
+  });
 
   const onSubmit = async (data: CategoryInput) => {
-    await updateMutation.mutateAsync({ id, data })
-  }
+    await updateMutation.mutateAsync({ id, data });
+  };
 
-  const categoryTypes: CategoryType[] = ['IDLE_CASH', 'HOT_CASH', 'EMERGENCY_FUND']
+  const categoryTypes: CategoryType[] = [
+    "IDLE_CASH",
+    "HOT_CASH",
+    "EMERGENCY_FUND",
+  ];
 
   if (isLoading) {
     return (
@@ -66,11 +70,11 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
         <div className="h-10 bg-muted animate-pulse rounded-md" />
         <div className="h-10 bg-muted animate-pulse rounded-md" />
       </div>
-    )
+    );
   }
 
   if (!category) {
-    return <p>Category not found</p>
+    return <p>Category not found</p>;
   }
 
   return (
@@ -85,7 +89,7 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
-              placeholder="e.g., Bank BCA, GoPay, Cash"
+              placeholder="e.g., Bank, EWallet, Cash"
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -116,10 +120,13 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
       />
 
       <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
-          {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+        <Button
+          type="submit"
+          disabled={isSubmitting || updateMutation.isPending}
+        >
+          {updateMutation.isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </form>
-  )
+  );
 }
