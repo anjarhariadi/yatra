@@ -14,10 +14,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { RecordForm } from "@/features/records";
 import { WalletEditForm } from "@/features/accounts/components/wallet-edit-form";
 import { trpc } from "@/lib/trpc/client";
+import { LineChartComponent } from "@/components/charts";
 import Image from "next/image";
 
 interface WalletDetailPageProps {
@@ -30,6 +37,7 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
   const [recordOpen, setRecordOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [period, setPeriod] = useState<"weekly" | "monthly">("monthly");
   const [recordToEdit, setRecordToEdit] = useState<{
     id: string;
     amount: number;
@@ -43,6 +51,9 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
   const { data: records, isLoading: recordsLoading } =
     trpc.records.getByWalletId.useQuery({ walletId });
 
+  const { data: chartData, isLoading: chartLoading } =
+    trpc.charts.getWalletChartData.useQuery({ walletId, period });
+
   const utils = trpc.useUtils();
 
   const updateRecordMutation = trpc.records.update.useMutation({
@@ -51,6 +62,7 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
       utils.records.getByWalletId.invalidate({ walletId });
       utils.accounts.getById.invalidate({ id: walletId });
       utils.accounts.getAll.invalidate();
+      utils.charts.getWalletChartData.invalidate({ walletId });
       setRecordToEdit(null);
     },
     onError: (error) => {
@@ -63,6 +75,7 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
       toast.success("Record deleted successfully");
       utils.accounts.getById.invalidate({ id: walletId });
       utils.accounts.getAll.invalidate();
+      utils.charts.getWalletChartData.invalidate({ walletId });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete record");
@@ -204,6 +217,34 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
               </DialogContent>
             </Dialog>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Balance Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={period} onValueChange={(v) => setPeriod(v as "weekly" | "monthly")}>
+            <TabsList>
+              <TabsTrigger value="weekly">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            </TabsList>
+            <TabsContent value="weekly" className="mt-4">
+              {chartLoading ? (
+                <div className="h-[150px] bg-muted animate-pulse rounded" />
+              ) : (
+                <LineChartComponent data={chartData || []} />
+              )}
+            </TabsContent>
+            <TabsContent value="monthly" className="mt-4">
+              {chartLoading ? (
+                <div className="h-[150px] bg-muted animate-pulse rounded" />
+              ) : (
+                <LineChartComponent data={chartData || []} />
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
