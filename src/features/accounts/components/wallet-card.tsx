@@ -1,31 +1,52 @@
-import { Pencil, Trash2 } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Pencil, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 interface WalletCardProps {
   wallet: {
-    id: string
-    name: string
-    notes: string | null
-    category: { name: string }
-    currentBalance?: number
-  }
-  onDelete: (id: string) => void
-  onEdit: (id: string) => void
-  isDeleting?: boolean
+    id: string;
+    name: string;
+    notes: string | null;
+    imageUrl: string | null;
+    category: { name: string };
+    currentBalance?: number;
+  };
+  onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
+  isDeleting?: boolean;
 }
 
-export function WalletCard({ wallet, onDelete, onEdit, isDeleting }: WalletCardProps) {
-  const balance = wallet.currentBalance ?? 0
+export function WalletCard({
+  wallet,
+  onDelete,
+  onEdit,
+  isDeleting,
+}: WalletCardProps) {
+  const balance = wallet.currentBalance ?? 0;
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">
-            {wallet.name}
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            {wallet.imageUrl ? (
+              <div className="relative w-10 h-10 rounded-md overflow-hidden">
+                <Image
+                  src={wallet.imageUrl}
+                  alt={wallet.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-md border bg-muted flex items-center justify-center text-muted-foreground font-bold">
+                {wallet.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <CardTitle className="text-lg">{wallet.name}</CardTitle>
+          </div>
           <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
             {wallet.category.name}
           </span>
@@ -51,10 +72,10 @@ export function WalletCard({ wallet, onDelete, onEdit, isDeleting }: WalletCardP
             disabled={isDeleting}
           >
             <Trash2 className="h-4 w-4 mr-1" />
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

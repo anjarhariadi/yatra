@@ -34,6 +34,7 @@ model Wallet {
   userId     String
   name       String
   notes      String?
+  imageUrl   String?
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 

@@ -2,6 +2,41 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { walletSchema } from "@/features/accounts/validation";
 import { TRPCError } from "@trpc/server";
+import { Bucket, MAX_FILE_SIZE_IMAGE } from "@/lib/supabase/bucket";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
+
+async function uploadWalletImage(
+  imageBase64: string,
+  walletId: string
+): Promise<string> {
+  const tmp = new Date().getTime().toString();
+  const buffer = Buffer.from(imageBase64, "base64");
+
+  if (buffer.byteLength > MAX_FILE_SIZE_IMAGE) {
+    throw new Error("Ukuran gambar tidak boleh lebih dari 2MB");
+  }
+
+  const fileName = `${walletId}.jpeg`;
+  const supabaseAdmin = createSupabaseAdmin();
+
+  const { data, error } = await supabaseAdmin.storage
+    .from(Bucket.WALLET_ICONS)
+    .upload(fileName, buffer, {
+      contentType: "image/jpeg",
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { data: urlData } = supabaseAdmin.storage
+    .from(Bucket.WALLET_ICONS)
+    .getPublicUrl(data.path);
+
+  return `${urlData.publicUrl}?t=${tmp}`;
+}
 
 export const accountsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -25,6 +60,7 @@ export const accountsRouter = createTRPCRouter({
       id: wallet.id,
       name: wallet.name,
       notes: wallet.notes,
+      imageUrl: wallet.imageUrl,
       userId: wallet.userId,
       categoryId: wallet.categoryId,
       category: {
@@ -71,6 +107,7 @@ export const accountsRouter = createTRPCRouter({
         id: wallet.id,
         name: wallet.name,
         notes: wallet.notes,
+        imageUrl: wallet.imageUrl,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
         category: {
@@ -127,10 +164,20 @@ export const accountsRouter = createTRPCRouter({
         },
       });
 
+      let imageUrl: string | undefined;
+      if (input.image) {
+        imageUrl = await uploadWalletImage(input.image, wallet.id);
+        await ctx.db.wallet.update({
+          where: { id: wallet.id },
+          data: { imageUrl },
+        });
+      }
+
       return {
         id: wallet.id,
         name: wallet.name,
         notes: wallet.notes,
+        imageUrl: imageUrl ?? null,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
         category: {
@@ -185,6 +232,11 @@ export const accountsRouter = createTRPCRouter({
         }
       }
 
+      let imageUrl = existing.imageUrl;
+      if (input.data.image) {
+        imageUrl = await uploadWalletImage(input.data.image, input.id);
+      }
+
       const wallet = await ctx.db.wallet.update({
         where: {
           id: input.id,
@@ -193,6 +245,7 @@ export const accountsRouter = createTRPCRouter({
           name: input.data.name,
           categoryId: input.data.categoryId,
           notes: input.data.notes,
+          imageUrl,
         },
         include: {
           category: true,
@@ -203,6 +256,7 @@ export const accountsRouter = createTRPCRouter({
         id: wallet.id,
         name: wallet.name,
         notes: wallet.notes,
+        imageUrl: wallet.imageUrl,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
         category: {

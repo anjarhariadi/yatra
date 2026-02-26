@@ -5,9 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { walletSchema, type WalletInput } from '../validation'
 import { trpc } from '@/lib/trpc/client'
+import { fileToBase64 } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { useState } from 'react'
+import Image from 'next/image'
 import {
   Field,
   FieldLabel,
@@ -28,6 +31,7 @@ interface WalletEditFormProps {
 
 export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
   const utils = trpc.useUtils()
+  const [preview, setPreview] = useState<string | null>(null)
 
   const { data: wallet, isLoading: walletLoading } = trpc.accounts.getById.useQuery({ id })
   const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery()
@@ -46,6 +50,7 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
@@ -58,6 +63,15 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
 
   const onSubmit = async (data: WalletInput) => {
     await updateMutation.mutateAsync({ id, data })
+  }
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const base64 = await fileToBase64(file)
+      setValue('image', base64)
+      setPreview(URL.createObjectURL(file))
+    }
   }
 
   if (walletLoading || categoriesLoading) {
@@ -92,6 +106,33 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
           </Field>
         )}
       />
+
+      <div className="space-y-2">
+        <FieldLabel htmlFor="image">Icon (optional)</FieldLabel>
+        <div className="flex items-center gap-4">
+          {preview || wallet.imageUrl ? (
+            <div className="relative w-16 h-16 rounded-md overflow-hidden border">
+              <Image
+                src={preview || wallet.imageUrl || ''}
+                alt="Preview"
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">
+              <span className="text-xs">64x64</span>
+            </div>
+          )}
+          <Input
+            id="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="flex-1"
+          />
+        </div>
+      </div>
 
       <Controller
         name="categoryId"
