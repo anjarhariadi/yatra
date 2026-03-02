@@ -8,6 +8,15 @@ const KEY_LENGTH = 32
 const PBKDF2_ITERATIONS = 100000
 const PBKDF2_DIGEST = 'sha256'
 
+const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET
+
+function getEncryptionSecret(): string {
+  if (!ENCRYPTION_SECRET) {
+    throw new Error('ENCRYPTION_SECRET environment variable is required')
+  }
+  return ENCRYPTION_SECRET
+}
+
 export interface DerivedKey {
   key: Buffer
   salt: Buffer
@@ -20,8 +29,10 @@ function deriveSaltFromUserId(userId: string): Buffer {
 
 export function deriveKey(userId: string, existingSalt?: Buffer): DerivedKey {
   const salt = existingSalt ?? deriveSaltFromUserId(userId)
+  const secret = getEncryptionSecret()
+  const keyMaterial = `${secret}:${userId}`
   const key = pbkdf2Sync(
-    userId,
+    keyMaterial,
     salt,
     PBKDF2_ITERATIONS,
     KEY_LENGTH,
