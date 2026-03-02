@@ -24,10 +24,10 @@ import {
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/accounts", icon: Wallet, label: "Wallets" },
-  { href: "/categories", icon: Tags, label: "Categories" },
-  { href: "/export", icon: Download, label: "Export" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dashboard/accounts", icon: Wallet, label: "Wallets" },
+  { href: "/dashboard/categories", icon: Tags, label: "Categories" },
+  { href: "/dashboard/export", icon: Download, label: "Export" },
 ];
 
 interface AppSidebarProps {

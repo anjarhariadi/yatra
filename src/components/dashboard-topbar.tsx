@@ -5,23 +5,19 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
 const routeTitles: Record<string, { title: string; description: string }> = {
-  "/": {
+  "/dashboard": {
     title: "Dashboard",
     description: "Welcome back!",
   },
-  "/accounts": {
+  "/dashboard/accounts": {
     title: "Wallets",
     description: "Manage your wallets",
   },
-  "/records": {
-    title: "Records",
-    description: "Track your balance history",
-  },
-  "/categories": {
+  "/dashboard/categories": {
     title: "Categories",
     description: "Organize your categories",
   },
-  "/export": {
+  "/dashboard/export": {
     title: "Export",
     description: "Download your data",
   },
@@ -29,9 +25,15 @@ const routeTitles: Record<string, { title: string; description: string }> = {
 
 export function DashboardTopbar() {
   const pathname = usePathname()
+  
   const routeInfo = routeTitles[pathname] || {
     title: "Dashboard",
     description: "Welcome back!",
+  }
+
+  if (pathname.startsWith("/dashboard/accounts/") && pathname !== "/dashboard/accounts") {
+    routeInfo.title = "Wallet Detail"
+    routeInfo.description = "View wallet history"
   }
 
   return (
