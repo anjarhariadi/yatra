@@ -108,7 +108,10 @@ export default function WalletDetailPage({ params }: WalletDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={() => router.push("/accounts")}>
+      <Button
+        variant="ghost"
+        onClick={() => router.push("/dashboard/accounts")}
+      >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Accounts
       </Button>

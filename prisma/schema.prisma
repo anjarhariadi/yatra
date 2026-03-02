@@ -48,9 +48,9 @@ model Wallet {
 
 model Record {
   id       String   @id @default(cuid())
-  amount   Decimal  @db.Decimal(15, 2)
+  amount   String   @db.Text
   date     DateTime
-  notes    String?
+  notes    String?  @db.Text
   walletId String
   wallet   Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
 

@@ -18,7 +18,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
   const balance = wallet.currentBalance ?? 0;
 
   return (
-    <Link href={`/accounts/${wallet.id}`}>
+    <Link href={`/dashboard/accounts/${wallet.id}`}>
       <Card className="cursor-pointer hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">

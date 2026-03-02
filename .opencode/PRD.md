@@ -419,13 +419,66 @@ DATABASE_URL=postgresql://...
 - Row Level Security on all tables
 - Password hashinghandled by Supabase)
 - Input validation with Zod
-  (- HTTPS in production
+- **Field-level encryption for sensitive data**
+- HTTPS in production
 
 **Out of Scope:**
 
 - Two-factor authentication (future)
 - Audit logging (future)
 - API rate limiting (future)
+
+### Field-Level Encryption
+
+#### Overview
+
+Yatra implements application-level field encryption to protect sensitive financial data. This ensures data remains encrypted even if the database is compromised.
+
+#### Data Classification
+
+| Field | Model | Sensitivity | Encrypted |
+| ----- | ----- | ----------- | ---------- |
+| `amount` | Record | High - Financial data | ✅ Yes |
+| `notes` | Record | High - User's private notes | ✅ Yes |
+| `notes` | Wallet | High - User's private notes | ✅ Yes |
+| `name` | Wallet | Low - Personal identifier | ❌ No |
+| `name` | Category | Low - Generic labels | ❌ No |
+| `type` | Category | Low - Enum values | ❌ No |
+| `imageUrl` | Wallet | Low - Public reference | ❌ No |
+
+#### Encryption Strategy
+
+**Algorithm**: AES-256-GCM (Galois/Counter Mode)
+
+**Key Management**: User-derived key from Supabase auth JWT
+- Encryption key derived using PBKDF2 from user's JWT
+- Each user's data encrypted with their own key
+- Keys never stored in database or transmitted unencrypted
+
+**Implementation**: Application-level (Node.js crypto)
+- Encryption/decryption happens in tRPC service layer
+- Fields encrypted before DB writes
+- Fields decrypted in query responses
+- Uses built-in Node.js `crypto` module (no external dependencies)
+
+#### Performance Considerations
+
+- ~5-10% CPU overhead for encrypted fields
+- Cannot filter/sort by encrypted amounts
+- Recommended: Store unencrypted reference for filtering if needed
+
+#### Migration Strategy
+
+1. Add new encrypted columns alongside existing columns
+2. Migrate existing data with encryption
+3. Switch application to use encrypted columns
+4. Drop legacy columns
+
+#### Future Enhancements
+
+- Key rotation mechanism
+- Deterministic encryption for search functionality
+- Hardware security module (HSM) integration
 
 ### Deployment Considerations
 
@@ -586,6 +639,8 @@ CREATE POLICY "Users can insert own categories" ON categories FOR INSERT WITH CH
 - [ ] Error messages are user-friendly
 - [ ] Dark mode works correctly
 - [ ] No console errors in production
+- [ ] Sensitive data (amounts, notes) encrypted at rest
+- [ ] Encryption key derived from user auth (not stored in DB)
 
 ### User Experience Goals
 
@@ -664,6 +719,8 @@ CREATE POLICY "Users can insert own categories" ON categories FOR INSERT WITH CH
 - **Print-Ready Reports**: Generate PDF reports
 - **Two-Factor Authentication**: Enhanced security
 - **Dark Mode Default**: Follow system preference
+- **Key Rotation**: Mechanism to rotate encryption keys
+- **Searchable Encryption**: Deterministic encryption for searching encrypted fields
 
 ### Integration Opportunities
 

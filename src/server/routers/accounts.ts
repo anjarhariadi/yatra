@@ -4,6 +4,7 @@ import { walletSchema } from "@/features/accounts/validation";
 import { TRPCError } from "@trpc/server";
 import { Bucket, MAX_FILE_SIZE_IMAGE } from "@/lib/supabase/bucket";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { encrypt, decrypt, deriveKey } from "@/lib/encryption";
 
 async function uploadWalletImage(
   imageBase64: string,
@@ -40,6 +41,8 @@ async function uploadWalletImage(
 
 export const accountsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
+    const key = deriveKey(ctx.user!.id).key
+
     const wallets = await ctx.db.wallet.findMany({
       where: {
         userId: ctx.user!.id,
@@ -62,7 +65,7 @@ export const accountsRouter = createTRPCRouter({
     return wallets.map((wallet) => ({
       id: wallet.id,
       name: wallet.name,
-      notes: wallet.notes,
+      notes: wallet.notes ? decrypt(wallet.notes, key) : null,
       imageUrl: wallet.imageUrl,
       userId: wallet.userId,
       categoryId: wallet.categoryId,
@@ -78,7 +81,7 @@ export const accountsRouter = createTRPCRouter({
       createdAt: wallet.createdAt.toISOString(),
       updatedAt: wallet.updatedAt.toISOString(),
       currentBalance: wallet.records[0]?.amount
-        ? Number(wallet.records[0].amount)
+        ? Number(decrypt(wallet.records[0].amount, key))
         : 0,
       _count: {
         records: wallet._count.records,
@@ -89,6 +92,8 @@ export const accountsRouter = createTRPCRouter({
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      const key = deriveKey(ctx.user!.id).key
+
       const wallet = await ctx.db.wallet.findFirst({
         where: {
           id: input.id,
@@ -112,7 +117,7 @@ export const accountsRouter = createTRPCRouter({
       return {
         id: wallet.id,
         name: wallet.name,
-        notes: wallet.notes,
+        notes: wallet.notes ? decrypt(wallet.notes, key) : null,
         imageUrl: wallet.imageUrl,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
@@ -129,14 +134,14 @@ export const accountsRouter = createTRPCRouter({
         updatedAt: wallet.updatedAt.toISOString(),
         records: wallet.records.map((r) => ({
           id: r.id,
-          amount: Number(r.amount),
+          amount: Number(decrypt(r.amount, key)),
           date: r.date.toISOString(),
-          notes: r.notes,
+          notes: r.notes ? decrypt(r.notes, key) : null,
           walletId: r.walletId,
           createdAt: r.createdAt.toISOString(),
         })),
         currentBalance: wallet.records[0]?.amount
-          ? Number(wallet.records[0].amount)
+          ? Number(decrypt(wallet.records[0].amount, key))
           : 0,
       };
     }),
@@ -144,6 +149,8 @@ export const accountsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(walletSchema)
     .mutation(async ({ ctx, input }) => {
+      const key = deriveKey(ctx.user!.id).key
+
       const category = await ctx.db.category.findFirst({
         where: {
           id: input.categoryId,
@@ -158,11 +165,13 @@ export const accountsRouter = createTRPCRouter({
         });
       }
 
+      const encryptedNotes = input.notes ? encrypt(input.notes, key) : null
+
       const wallet = await ctx.db.wallet.create({
         data: {
           name: input.name,
           categoryId: input.categoryId,
-          notes: input.notes ?? null,
+          notes: encryptedNotes,
           userId: ctx.user!.id,
         },
         include: {
@@ -182,7 +191,7 @@ export const accountsRouter = createTRPCRouter({
       return {
         id: wallet.id,
         name: wallet.name,
-        notes: wallet.notes,
+        notes: wallet.notes ? decrypt(wallet.notes, key) : null,
         imageUrl: imageUrl ?? null,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
@@ -208,6 +217,8 @@ export const accountsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const key = deriveKey(ctx.user!.id).key
+
       const existing = await ctx.db.wallet.findFirst({
         where: {
           id: input.id,
@@ -243,16 +254,31 @@ export const accountsRouter = createTRPCRouter({
         imageUrl = await uploadWalletImage(input.data.image, input.id);
       }
 
+      const updateData: {
+        name?: string
+        categoryId?: string
+        notes?: string | null
+        imageUrl?: string | null
+      } = {}
+
+      if (input.data.name !== undefined) {
+        updateData.name = input.data.name
+      }
+      if (input.data.categoryId !== undefined) {
+        updateData.categoryId = input.data.categoryId
+      }
+      if (input.data.notes !== undefined) {
+        updateData.notes = input.data.notes ? encrypt(input.data.notes, key) : null
+      }
+      if (imageUrl !== existing.imageUrl) {
+        updateData.imageUrl = imageUrl
+      }
+
       const wallet = await ctx.db.wallet.update({
         where: {
           id: input.id,
         },
-        data: {
-          name: input.data.name,
-          categoryId: input.data.categoryId,
-          notes: input.data.notes,
-          imageUrl,
-        },
+        data: updateData,
         include: {
           category: true,
         },
@@ -261,7 +287,7 @@ export const accountsRouter = createTRPCRouter({
       return {
         id: wallet.id,
         name: wallet.name,
-        notes: wallet.notes,
+        notes: wallet.notes ? decrypt(wallet.notes, key) : null,
         imageUrl: wallet.imageUrl,
         userId: wallet.userId,
         categoryId: wallet.categoryId,

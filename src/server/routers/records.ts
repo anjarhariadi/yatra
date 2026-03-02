@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure } from '../trpc'
 import { recordSchema, recordUpdateSchema } from '@/features/records/validation'
 import { TRPCError } from '@trpc/server'
+import { encrypt, decrypt, deriveKey } from '@/lib/encryption'
 
 export const recordsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -21,20 +22,24 @@ export const recordsRouter = createTRPCRouter({
         })
       }
 
+      const key = deriveKey(ctx.user!.id).key
+      const encryptedAmount = encrypt(input.amount.toString(), key)
+      const encryptedNotes = input.notes ? encrypt(input.notes, key) : null
+
       const record = await ctx.db.record.create({
         data: {
           walletId: input.walletId,
-          amount: input.amount,
+          amount: encryptedAmount,
           date: new Date(input.date),
-          notes: input.notes ?? null,
+          notes: encryptedNotes,
         },
       })
 
       return {
         id: record.id,
-        amount: Number(record.amount),
+        amount: Number(decrypt(record.amount, key)),
         date: record.date.toISOString(),
-        notes: record.notes,
+        notes: record.notes ? decrypt(record.notes, key) : null,
         walletId: record.walletId,
         createdAt: record.createdAt.toISOString(),
       }
@@ -57,6 +62,8 @@ export const recordsRouter = createTRPCRouter({
         })
       }
 
+      const key = deriveKey(ctx.user!.id).key
+
       const records = await ctx.db.record.findMany({
         where: {
           walletId: input.walletId,
@@ -69,9 +76,9 @@ export const recordsRouter = createTRPCRouter({
 
       return records.map((r) => ({
         id: r.id,
-        amount: Number(r.amount),
+        amount: Number(decrypt(r.amount, key)),
         date: r.date.toISOString(),
-        notes: r.notes,
+        notes: r.notes ? decrypt(r.notes, key) : null,
         walletId: r.walletId,
         createdAt: r.createdAt.toISOString(),
       }))
@@ -108,20 +115,22 @@ export const recordsRouter = createTRPCRouter({
         })
       }
 
+      const key = deriveKey(ctx.user!.id).key
+
       const updateData: {
-        amount?: number
+        amount?: string
         date?: Date
         notes?: string | null
       } = {}
 
       if (input.data.amount !== undefined) {
-        updateData.amount = input.data.amount
+        updateData.amount = encrypt(input.data.amount.toString(), key)
       }
       if (input.data.date !== undefined) {
         updateData.date = new Date(input.data.date)
       }
       if (input.data.notes !== undefined) {
-        updateData.notes = input.data.notes ?? null
+        updateData.notes = input.data.notes ? encrypt(input.data.notes, key) : null
       }
 
       const record = await ctx.db.record.update({
@@ -133,9 +142,9 @@ export const recordsRouter = createTRPCRouter({
 
       return {
         id: record.id,
-        amount: Number(record.amount),
+        amount: Number(decrypt(record.amount, key)),
         date: record.date.toISOString(),
-        notes: record.notes,
+        notes: record.notes ? decrypt(record.notes, key) : null,
         walletId: record.walletId,
         createdAt: record.createdAt.toISOString(),
       }

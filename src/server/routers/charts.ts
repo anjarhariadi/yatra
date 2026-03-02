@@ -7,6 +7,7 @@ import {
   generateMonthlyPeriods,
   findClosestRecord,
 } from "@/lib/date-utils";
+import { decrypt, deriveKey } from "@/lib/encryption";
 
 const periodSchema = z.enum(["weekly", "monthly"]);
 
@@ -33,6 +34,8 @@ export const chartsRouter = createTRPCRouter({
         });
       }
 
+      const key = deriveKey(ctx.user!.id).key
+
       const records = await ctx.db.record.findMany({
         where: {
           walletId: input.walletId,
@@ -46,7 +49,7 @@ export const chartsRouter = createTRPCRouter({
 
       const recordDates = records.map((r) => ({
         date: new Date(r.date),
-        amount: Number(r.amount),
+        amount: Number(decrypt(r.amount, key)),
         createdAt: r.createdAt,
       }));
 
@@ -82,6 +85,8 @@ export const chartsRouter = createTRPCRouter({
   getGlobalChartData: protectedProcedure
     .input(z.object({ period: periodSchema }))
     .query(async ({ ctx, input }) => {
+      const key = deriveKey(ctx.user!.id).key
+
       const wallets = await ctx.db.wallet.findMany({
         where: {
           userId: ctx.user!.id,
@@ -97,7 +102,7 @@ export const chartsRouter = createTRPCRouter({
         wallet.records.map((r) => ({
           walletId: wallet.id,
           date: new Date(r.date),
-          amount: Number(r.amount),
+          amount: Number(decrypt(r.amount, key)),
           createdAt: r.createdAt,
         })),
       );
@@ -199,6 +204,8 @@ export const chartsRouter = createTRPCRouter({
     }),
 
   getWalletDistribution: protectedProcedure.query(async ({ ctx }) => {
+    const key = deriveKey(ctx.user!.id).key
+
     const wallets = await ctx.db.wallet.findMany({
       where: {
         userId: ctx.user!.id,
@@ -222,7 +229,7 @@ export const chartsRouter = createTRPCRouter({
 
     return wallets.map((wallet, index) => ({
       name: wallet.name,
-      value: wallet.records[0]?.amount ? Number(wallet.records[0].amount) : 0,
+      value: wallet.records[0]?.amount ? Number(decrypt(wallet.records[0].amount, key)) : 0,
       fill: colors[index % colors.length],
     }));
   }),
