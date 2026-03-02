@@ -1,23 +1,26 @@
-"use client"
+"use client";
 
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { login } from '../api/auth-client'
-import { loginSchema, type LoginInput } from '../validation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { login } from "../api/auth-client";
+import { loginSchema, type LoginInput } from "../validation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '@/components/ui/field'
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 export function LoginForm() {
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     control,
@@ -26,26 +29,27 @@ export function LoginForm() {
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
-    }
-  })
+      email: "",
+      password: "",
+    },
+  });
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      await login(data)
-      router.push('/')
-      router.refresh()
+      await login(data);
+      router.push("/dashboard");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'An error occurred')
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     }
-  }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Login</CardTitle>
-        <CardDescription>Enter your email and password to sign in</CardDescription>
+        <CardDescription>
+          Enter your email and password to sign in
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
@@ -62,7 +66,9 @@ export function LoginForm() {
                   placeholder="you@example.com"
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -78,7 +84,9 @@ export function LoginForm() {
                   type="password"
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
                 <p className="text-sm">
                   <Link href="/reset-password" className="underline">
                     Forgot password?
@@ -90,10 +98,10 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
+            {isSubmitting ? "Signing in..." : "Sign In"}
           </Button>
           <p className="text-sm text-center">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="underline">
               Sign up
             </Link>
@@ -101,5 +109,5 @@ export function LoginForm() {
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }
