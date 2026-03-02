@@ -11,7 +11,8 @@ import {
   FileText, 
   BarChart3, 
   Download, 
-  Moon 
+  Moon,
+  Shield
 } from "lucide-react";
 
 const featureList = [
@@ -21,6 +22,7 @@ const featureList = [
   "Visual Insights",
   "Data Export",
   "Dark Mode",
+  "Bank-Level Encryption",
 ];
 
 const features = [
@@ -53,6 +55,11 @@ const features = [
     title: "Dark Mode",
     description: "Easy on the eyes with beautiful dark mode support.",
     icon: Moon,
+  },
+  {
+    title: "Bank-Level Encryption",
+    description: "Your data is encrypted with AES-256 encryption. Only you can access your financial information.",
+    icon: Shield,
   },
 ];
 
