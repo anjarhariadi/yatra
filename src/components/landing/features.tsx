@@ -71,7 +71,7 @@ export function Features() {
       <div className="text-center space-y-4 mb-12">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">
           Everything you need to{" "}
-          <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
+          <span className="bg-linear-to-b from-primary/60 to-primary text-transparent bg-clip-text">
             track your money
           </span>
         </h2>
