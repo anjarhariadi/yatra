@@ -1,27 +1,22 @@
 import type { Metadata } from "next";
-import {
-  Architects_Daughter,
-  Courier_Prime,
-  Newsreader,
-} from "next/font/google";
+import { Inter, Merriweather, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
 
-const fontSans = Architects_Daughter({
-  weight: "400",
+const fontSans = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
-const fontSerif = Newsreader({
+const fontSerif = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-serif",
 });
 
-const fontMono = Courier_Prime({
-  weight: "400",
+const fontMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 });

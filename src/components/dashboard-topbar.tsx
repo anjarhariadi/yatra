@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import { usePathname } from "next/navigation"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { ModeToggle } from "./mode-toggle";
 
 const routeTitles: Record<string, { title: string; description: string }> = {
   "/dashboard": {
@@ -21,25 +22,28 @@ const routeTitles: Record<string, { title: string; description: string }> = {
     title: "Export",
     description: "Download your data",
   },
-}
+};
 
 export function DashboardTopbar() {
-  const pathname = usePathname()
-  
+  const pathname = usePathname();
+
   const routeInfo = routeTitles[pathname] || {
     title: "Dashboard",
     description: "Welcome back!",
-  }
+  };
 
-  if (pathname.startsWith("/dashboard/accounts/") && pathname !== "/dashboard/accounts") {
-    routeInfo.title = "Wallet Detail"
-    routeInfo.description = "View wallet history"
+  if (
+    pathname.startsWith("/dashboard/accounts/") &&
+    pathname !== "/dashboard/accounts"
+  ) {
+    routeInfo.title = "Wallet Detail";
+    routeInfo.description = "View wallet history";
   }
 
   return (
     <header
       className={cn(
-        "flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6"
+        "flex items-center gap-4 border-b bg-background px-4 py-2 md:px-6",
       )}
     >
       <SidebarTrigger />
@@ -47,6 +51,7 @@ export function DashboardTopbar() {
         <h1 className="text-lg font-semibold">{routeInfo.title}</h1>
         <p className="text-sm text-muted-foreground">{routeInfo.description}</p>
       </div>
+      <ModeToggle />
     </header>
-  )
+  );
 }
