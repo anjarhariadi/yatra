@@ -29,6 +29,7 @@ CREATE TABLE "Wallet" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "notes" TEXT,
+    "imageUrl" TEXT,
     "userId" TEXT NOT NULL,
     "categoryId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
