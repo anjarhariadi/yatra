@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./data/uploads:/app/data/uploads
+      - ./public_data:/app/data/
     restart: unless-stopped
 
   db:

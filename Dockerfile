@@ -25,7 +25,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma/migrations ./prisma/migrations
 
 # Create uploads directory and public_data volume mount point
-RUN mkdir -p /app/public_data
+RUN mkdir -p /app/data/uploads
 
 # Environment variables (set at runtime via docker run -e or docker-compose env_file)
 # Required:
