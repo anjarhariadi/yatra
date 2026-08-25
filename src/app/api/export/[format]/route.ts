@@ -1,6 +1,7 @@
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { db } from "@/server/db";
 import { deriveKey, decrypt } from "@/lib/encryption";
 
@@ -20,9 +21,9 @@ export async function GET(
   }
   const format = parsed.data;
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+  const user = session?.user;
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -1,34 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+// This file is kept for compatibility but no longer uses Better Auth.
+// Server components should call auth.api.getSession({ headers }) directly.
 
-export async function getUser() {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error) {
-    return null
-  }
-
-  return data.user
-}
-
-export async function getSession() {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getSession()
-
-  if (error) {
-    return null
-  }
-
-  return data.session
-}
-
-export async function requireUser() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    throw new Error('Unauthorized')
-  }
-
-  return user
-}
+// Remove the above line and just export nothing:

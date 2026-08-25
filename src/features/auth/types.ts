@@ -1,4 +1,4 @@
-import { type User } from '@supabase/supabase-js'
+import type { User } from "better-auth";
 
 export interface AuthState {
   user: User | null

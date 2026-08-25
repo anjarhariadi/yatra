@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/features/auth";
 
 import {
   LayoutDashboard,
@@ -32,6 +33,28 @@ const navItems = [
 
 interface AppSidebarProps {
   userEmail: string;
+}
+
+function SignOutButton() {
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center"
+      onClick={handleSignOut}
+    >
+      <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
+      <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
+    </Button>
+  );
 }
 
 export function AppSidebar({ userEmail }: AppSidebarProps) {
@@ -70,19 +93,7 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
             {userEmail}
           </span>
         </div>
-        <form action={"/api/auth/signout"} method="post">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center"
-            type="submit"
-          >
-            <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
-            <span className="group-data-[collapsible=icon]:hidden">
-              Sign Out
-            </span>
-          </Button>
-        </form>
+        <SignOutButton />
       </SidebarFooter>
     </Sidebar>
   );

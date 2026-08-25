@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { resetPassword } from '../api/auth-client'
+import { requestPasswordReset } from '../api/auth-client'
 import { resetPasswordSchema, type ResetPasswordInput } from '../validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,7 +29,7 @@ export function ResetPasswordForm() {
 
   const onSubmit = async (data: ResetPasswordInput) => {
     try {
-      await resetPassword(data)
+      await requestPasswordReset(data)
       setSuccess(true)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An error occurred')

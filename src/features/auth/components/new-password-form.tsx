@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +18,8 @@ import {
 
 export function NewPasswordForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token') ?? undefined
 
   const {
     control,
@@ -33,8 +35,9 @@ export function NewPasswordForm() {
 
   const onSubmit = async (data: NewPasswordInput) => {
     try {
-      await updatePassword(data)
-      router.push('/')
+      await updatePassword(data, token)
+      toast.success('Password updated. Please sign in.')
+      router.push('/login')
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An error occurred')

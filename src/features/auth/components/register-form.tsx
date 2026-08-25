@@ -38,7 +38,8 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterInput) => {
     try {
       await registerUser(data);
-      router.push("/login");
+      router.push("/dashboard");
+      router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "An error occurred");
     }
