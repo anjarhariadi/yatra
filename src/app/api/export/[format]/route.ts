@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/server/db";
+import { prisma as db } from "@/lib/prisma/db";
 import { deriveKey, decrypt } from "@/lib/encryption";
 
 const formatSchema = z.enum(["csv", "json"]);
@@ -95,7 +95,14 @@ export async function GET(
   }
 
   const rows = [
-    ["date", "wallet_name", "category_name", "category_type", "amount", "notes"].join(","),
+    [
+      "date",
+      "wallet_name",
+      "category_name",
+      "category_type",
+      "amount",
+      "notes",
+    ].join(","),
     ...wallets.flatMap((w) =>
       w.records.map((r) =>
         [

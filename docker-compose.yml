@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    container_name: yatra-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./data/uploads:/app/data/uploads
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    container_name: yatra-db
+    environment:
+      - POSTGRES_DB=${DB_USER}
+      - POSTGRES_USER=${DB_NAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./db_data:/var/lib/postgresql/data:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

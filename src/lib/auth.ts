@@ -1,7 +1,7 @@
+import { prisma } from "@/lib/prisma/db";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import prisma from "@/lib/prisma/client";
 
 const RESEND_API = "https://api.resend.com/emails";
 
