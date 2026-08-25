@@ -1,25 +1,28 @@
-"use client"
+"use client";
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { updatePassword } from '../api/auth-client'
-import { newPasswordSchema, type NewPasswordInput } from '../validation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { updatePassword } from "../api/auth-client";
+import { newPasswordSchema, type NewPasswordInput } from "../validation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '@/components/ui/field'
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 export function NewPasswordForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token') ?? undefined
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? undefined;
 
   const {
     control,
@@ -28,29 +31,29 @@ export function NewPasswordForm() {
   } = useForm<NewPasswordInput>({
     resolver: zodResolver(newPasswordSchema),
     defaultValues: {
-      password: '',
-      confirmPassword: '',
-    }
-  })
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   const onSubmit = async (data: NewPasswordInput) => {
     try {
-      await updatePassword(data, token)
-      toast.success('Password updated. Please sign in.')
-      router.push('/login')
-      router.refresh()
+      await updatePassword(data, token);
+      toast.success("Password updated. Please sign in.");
+      router.push("/login");
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'An error occurred')
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     }
-  }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>New Password</CardTitle>
-        <CardDescription>Enter your new password below</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Card>
+        <CardHeader>
+          <CardTitle>New Password</CardTitle>
+          <CardDescription>Enter your new password below</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4">
           <Controller
             name="password"
@@ -64,7 +67,9 @@ export function NewPasswordForm() {
                   type="password"
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -80,14 +85,16 @@ export function NewPasswordForm() {
                   type="password"
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Updating...' : 'Update Password'}
+            {isSubmitting ? "Updating..." : "Update Password"}
           </Button>
           <p className="text-sm text-center">
             <Link href="/login" className="underline">
@@ -95,7 +102,7 @@ export function NewPasswordForm() {
             </Link>
           </p>
         </CardFooter>
-      </form>
-    </Card>
-  )
+      </Card>
+    </form>
+  );
 }
