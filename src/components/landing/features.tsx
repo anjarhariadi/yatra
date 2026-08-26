@@ -66,7 +66,7 @@ export function Features() {
   return (
     <section
       id="features"
-      className="container mx-auto py-16 md:py-24 lg:py-32"
+      className="container mx-auto px-4 py-16 md:py-24 lg:py-32"
     >
       <div className="text-center space-y-4 mb-12">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">
