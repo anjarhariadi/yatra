@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { trpc } from "@/lib/trpc/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ export default function DashboardPage() {
     trpc.charts.getGlobalChartData.useQuery({ period });
   const { data: walletDistribution, isLoading: distributionLoading } =
     trpc.charts.getWalletDistribution.useQuery();
+  const { data: comparison } = trpc.charts.getBalanceComparison.useQuery();
 
   const totalBalance =
     wallets?.reduce((sum, w) => sum + (w.currentBalance ?? 0), 0) ?? 0;
@@ -52,6 +54,32 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(totalBalance)}
             </div>
+            {comparison && comparison.changePercent !== null ? (
+              <div className=" flex items-center gap-1">
+                <span
+                  className={`mt-1 flex items-center gap-1 text-sm font-medium border rounded-full px-2 ${
+                    comparison.direction === "up"
+                      ? "text-emerald-500 bg-emerald-500/10 border-emerald-500"
+                      : comparison.direction === "down"
+                        ? "text-red-500 bg-red-500/10 border-red-500"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {comparison.direction === "up" ? (
+                    <TrendingUp className="h-4 w-4" />
+                  ) : comparison.direction === "down" ? (
+                    <TrendingDown className="h-4 w-4" />
+                  ) : (
+                    <Minus className="h-4 w-4" />
+                  )}
+                  {comparison.direction === "up" ? "+" : ""}
+                  {comparison.changePercent}%{" "}
+                </span>
+                <p className="text-muted-foreground text-sm">vs last month</p>
+              </div>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">No data yet</p>
+            )}
           </CardContent>
         </Card>
         <Card>

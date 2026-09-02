@@ -30,6 +30,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
                     src={wallet.imageUrl}
                     alt={wallet.name}
                     fill
+                    sizes="240"
                     className="object-cover"
                   />
                 </div>
