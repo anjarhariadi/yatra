@@ -156,9 +156,14 @@ export const accountsRouter = createTRPCRouter({
         },
       });
 
-      let imageUrl: string | undefined;
-      if (input.image) {
+      let imageUrl: string | null = null;
+      if (input.imageUrl) {
+        imageUrl = input.imageUrl;
+      } else if (input.image) {
         imageUrl = await uploadWalletImage(input.image, wallet.id);
+      }
+
+      if (imageUrl) {
         await ctx.db.wallet.update({
           where: { id: wallet.id },
           data: { imageUrl },
@@ -169,7 +174,7 @@ export const accountsRouter = createTRPCRouter({
         id: wallet.id,
         name: wallet.name,
         notes: wallet.notes ? decrypt(wallet.notes, key) : null,
-        imageUrl: imageUrl ?? null,
+        imageUrl,
         userId: wallet.userId,
         categoryId: wallet.categoryId,
         category: {
@@ -228,7 +233,17 @@ export const accountsRouter = createTRPCRouter({
       }
 
       let imageUrl = existing.imageUrl;
-      if (input.data.image) {
+      if (input.data.imageUrl) {
+        // Clean up old local file if switching to a URL
+        if (existing.imageUrl && existing.imageUrl.startsWith('/api/files/')) {
+          await deleteImage(existing.imageUrl);
+        }
+        imageUrl = input.data.imageUrl;
+      } else if (input.data.image) {
+        // Clean up old local file before uploading new one
+        if (existing.imageUrl && existing.imageUrl.startsWith('/api/files/')) {
+          await deleteImage(existing.imageUrl);
+        }
         imageUrl = await uploadWalletImage(input.data.image, input.id);
       }
 
@@ -309,7 +324,7 @@ export const accountsRouter = createTRPCRouter({
         },
       });
 
-      if (existing.imageUrl) {
+      if (existing.imageUrl && existing.imageUrl.startsWith('/api/files/')) {
         await deleteImage(existing.imageUrl);
       }
 

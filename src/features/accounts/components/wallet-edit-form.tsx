@@ -1,51 +1,49 @@
-"use client"
+"use client";
 
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { walletSchema, type WalletInput } from '../validation'
-import { trpc } from '@/lib/trpc/client'
-import { fileToBase64 } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { useState } from 'react'
-import Image from 'next/image'
-import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '@/components/ui/field'
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { walletSchema, type WalletInput } from "../validation";
+import { trpc } from "@/lib/trpc/client";
+import { fileToBase64 } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import Image from "next/image";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 interface WalletEditFormProps {
-  id: string
-  onSuccess?: () => void
+  id: string;
+  onSuccess?: () => void;
 }
 
 export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
-  const utils = trpc.useUtils()
-  const [preview, setPreview] = useState<string | null>(null)
+  const utils = trpc.useUtils();
+  const [preview, setPreview] = useState<string | null>(null);
 
-  const { data: wallet, isLoading: walletLoading } = trpc.accounts.getById.useQuery({ id })
-  const { data: categories, isLoading: categoriesLoading } = trpc.categories.getAll.useQuery()
+  const { data: wallet, isLoading: walletLoading } =
+    trpc.accounts.getById.useQuery({ id });
+  const { data: categories, isLoading: categoriesLoading } =
+    trpc.categories.getAll.useQuery();
 
   const updateMutation = trpc.accounts.update.useMutation({
     onSuccess: () => {
-      toast.success('Wallet updated successfully')
-      utils.accounts.getAll.invalidate()
-      onSuccess?.()
+      toast.success("Wallet updated successfully");
+      utils.accounts.getAll.invalidate();
+      onSuccess?.();
     },
     onError: (err) => {
-      toast.error(err.message || 'An error occurred')
+      toast.error(err.message || "An error occurred");
     },
-  })
+  });
 
   const {
     control,
@@ -54,25 +52,29 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
     formState: { isSubmitting },
   } = useForm<WalletInput>({
     resolver: zodResolver(walletSchema),
-    values: wallet ? {
-      name: wallet.name,
-      categoryId: wallet.categoryId,
-      notes: wallet.notes || '',
-    } : undefined,
-  })
+    values: wallet
+      ? {
+          name: wallet.name,
+          categoryId: wallet.categoryId,
+          notes: wallet.notes || "",
+          imageUrl: wallet.imageUrl || "",
+        }
+      : undefined,
+  });
 
   const onSubmit = async (data: WalletInput) => {
-    await updateMutation.mutateAsync({ id, data })
-  }
+    await updateMutation.mutateAsync({ id, data });
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const base64 = await fileToBase64(file)
-      setValue('image', base64)
-      setPreview(URL.createObjectURL(file))
+      const base64 = await fileToBase64(file);
+      setValue("image", base64);
+      setValue("imageUrl", "");
+      setPreview(URL.createObjectURL(file));
     }
-  }
+  };
 
   if (walletLoading || categoriesLoading) {
     return (
@@ -81,11 +83,11 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
         <div className="h-10 bg-muted animate-pulse rounded-md" />
         <div className="h-20 bg-muted animate-pulse rounded-md" />
       </div>
-    )
+    );
   }
 
   if (!wallet) {
-    return <p>Wallet not found</p>
+    return <p>Wallet not found</p>;
   }
 
   return (
@@ -108,29 +110,57 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
       />
 
       <div className="space-y-2">
-        <FieldLabel htmlFor="image">Icon (optional)</FieldLabel>
+        <FieldLabel>Icon (optional)</FieldLabel>
         <div className="flex items-center gap-4">
           {preview || wallet.imageUrl ? (
-            <div className="relative w-16 h-16 rounded-md overflow-hidden border">
+            <div className="relative w-16 h-16 rounded-md overflow-hidden border shrink-0">
               <Image
-                src={preview || wallet.imageUrl || ''}
+                src={preview || wallet.imageUrl || ""}
                 alt="Preview"
                 fill
                 className="object-cover"
               />
             </div>
           ) : (
-            <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center text-muted-foreground">
+            <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center text-muted-foreground shrink-0">
               <span className="text-xs">64x64</span>
             </div>
           )}
-          <Input
-            id="image"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="flex-1"
-          />
+          <div className="flex-1 space-y-2">
+            <Input type="file" accept="image/*" onChange={handleImageChange} />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-1 text-muted-foreground">
+                  or
+                </span>
+              </div>
+            </div>
+            <Controller
+              name="imageUrl"
+              control={control}
+              render={({ field, fieldState }) => (
+                <div>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="Paste image URL"
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                      setPreview(e.target.value || null);
+                    }}
+                  />
+                  {fieldState.invalid && (
+                    <p className="text-xs text-destructive mt-1">
+                      {fieldState.error?.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </div>
         </div>
       </div>
 
@@ -175,10 +205,13 @@ export function WalletEditForm({ id, onSuccess }: WalletEditFormProps) {
       />
 
       <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
-          {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+        <Button
+          type="submit"
+          disabled={isSubmitting || updateMutation.isPending}
+        >
+          {updateMutation.isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </form>
-  )
+  );
 }
