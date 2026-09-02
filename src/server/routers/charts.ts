@@ -44,6 +44,42 @@ function getLastMonthEnd(): Date {
   return new Date(now.getFullYear(), now.getMonth(), 0);
 }
 
+function compareToLastMonth(records: DecryptedRecord[]) {
+  if (records.length === 0) {
+    return { changePercent: null, direction: "flat" as const };
+  }
+
+  const currentTotal = sumLatestPerWallet(records);
+  const prevMonthTotal = sumLatestPerWallet(records, getLastMonthEnd());
+
+  if (prevMonthTotal === 0) {
+    return { changePercent: null, direction: "flat" as const };
+  }
+
+  const changePercent =
+    ((currentTotal - prevMonthTotal) / prevMonthTotal) * 100;
+
+  const direction =
+    changePercent === 0
+      ? ("flat" as const)
+      : changePercent > 0
+        ? ("up" as const)
+        : ("down" as const);
+
+  return {
+    changePercent: Math.round(changePercent * 10) / 10,
+    direction,
+  };
+}
+
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
+
 export const chartsRouter = createTRPCRouter({
   getWalletChartData: protectedProcedure
     .input(
@@ -67,7 +103,7 @@ export const chartsRouter = createTRPCRouter({
         });
       }
 
-      const key = deriveKey(ctx.user!.id).key
+      const key = deriveKey(ctx.user!.id).key;
 
       const records = await ctx.db.record.findMany({
         where: {
@@ -115,81 +151,8 @@ export const chartsRouter = createTRPCRouter({
       return chartData;
     }),
 
-  getGlobalChartData: protectedProcedure
-    .input(z.object({ period: periodSchema }))
-    .query(async ({ ctx, input }) => {
-      const key = deriveKey(ctx.user!.id).key
-
-      const wallets = await ctx.db.wallet.findMany({
-        where: {
-          userId: ctx.user!.id,
-        },
-        include: {
-          records: {
-            orderBy: [{ date: "asc" }, { createdAt: "asc" }],
-          },
-        },
-      });
-
-      const allRecords = wallets.flatMap((wallet) =>
-        wallet.records.map((r) => ({
-          walletId: wallet.id,
-          date: new Date(r.date),
-          amount: Number(decrypt(r.amount, key)),
-          createdAt: r.createdAt,
-        })),
-      );
-
-      if (allRecords.length === 0) {
-        return [];
-      }
-
-      allRecords.sort((a, b) => {
-        const dateDiff = a.date.getTime() - b.date.getTime();
-        if (dateDiff !== 0) return dateDiff;
-        if (a.createdAt && b.createdAt) {
-          return a.createdAt.getTime() - b.createdAt.getTime();
-        }
-        return 0;
-      });
-
-      const firstDate = allRecords[0].date;
-      const now = new Date();
-
-      const periods =
-        input.period === "weekly"
-          ? generateWeeklyPeriods(firstDate, now)
-          : generateMonthlyPeriods(firstDate, now);
-
-      const chartData = periods
-        .map((period) => {
-          const prevRecords = allRecords.filter((r) => r.date <= period);
-          if (prevRecords.length === 0) return null;
-
-          const totalBalance = sumLatestPerWallet(prevRecords);
-          return {
-            date: period.toISOString(),
-            balance: totalBalance,
-          };
-        })
-        .filter(
-          (item): item is { date: string; balance: number } =>
-            item !== null && item.balance > 0,
-        );
-
-      if (chartData.length === 0 && allRecords.length > 0) {
-        const latestDate = allRecords[allRecords.length - 1].date;
-        chartData.push({
-          date: getMonthEndDate(latestDate).toISOString(),
-          balance: sumLatestPerWallet(allRecords),
-        });
-      }
-
-      return chartData;
-    }),
-
-  getWalletDistribution: protectedProcedure.query(async ({ ctx }) => {
-    const key = deriveKey(ctx.user!.id).key
+  getDashboardData: protectedProcedure.query(async ({ ctx }) => {
+    const key = deriveKey(ctx.user!.id).key;
 
     const wallets = await ctx.db.wallet.findMany({
       where: {
@@ -198,38 +161,11 @@ export const chartsRouter = createTRPCRouter({
       include: {
         category: true,
         records: {
-          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-          take: 1,
-        },
-      },
-    });
-
-    const colors = [
-      "var(--chart-1)",
-      "var(--chart-2)",
-      "var(--chart-3)",
-      "var(--chart-4)",
-      "var(--chart-5)",
-    ];
-
-    return wallets.map((wallet, index) => ({
-      name: wallet.name,
-      value: wallet.records[0]?.amount ? Number(decrypt(wallet.records[0].amount, key)) : 0,
-      fill: colors[index % colors.length],
-    }));
-  }),
-
-  getBalanceComparison: protectedProcedure.query(async ({ ctx }) => {
-    const key = deriveKey(ctx.user!.id).key
-
-    const wallets = await ctx.db.wallet.findMany({
-      where: {
-        userId: ctx.user!.id,
-      },
-      include: {
-        records: {
           orderBy: [{ date: "asc" }, { createdAt: "asc" }],
         },
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 
@@ -242,31 +178,87 @@ export const chartsRouter = createTRPCRouter({
       })),
     );
 
-    if (records.length === 0) {
-      return { changePercent: null, direction: "flat" as const };
-    }
+    const walletCount = wallets.length;
+    const recordCount = records.length;
 
-    const currentTotal = sumLatestPerWallet(records);
-    const prevMonthTotal = sumLatestPerWallet(
-      records,
-      getLastMonthEnd(),
+    const hotWalletIds = new Set(
+      wallets
+        .filter((w) => w.category.type === "HOT_CASH")
+        .map((w) => w.id),
     );
+    const hotRecords = records.filter((r) => hotWalletIds.has(r.walletId));
 
-    if (prevMonthTotal === 0) {
-      return { changePercent: null, direction: "flat" as const };
-    }
+    const totalBalance = sumLatestPerWallet(records);
+    const hotMoney = sumLatestPerWallet(hotRecords);
 
-    const changePercent =
-      ((currentTotal - prevMonthTotal) / prevMonthTotal) * 100;
+    const now = new Date();
+    const firstDate = records[0]?.date ?? now;
 
-    const direction =
-      changePercent === 0 ? ("flat" as const)
-      : changePercent > 0 ? ("up" as const)
-      : ("down" as const);
+    const weeklyPeriods = generateWeeklyPeriods(firstDate, now);
+    const monthlyPeriods = generateMonthlyPeriods(firstDate, now);
+
+    const buildGlobalChart = (periods: Date[]) => {
+      const chartData = periods
+        .map((period) => {
+          const prevRecords = records.filter((r) => r.date <= period);
+          if (prevRecords.length === 0) return null;
+          return {
+            date: period.toISOString(),
+            balance: sumLatestPerWallet(prevRecords),
+          };
+        })
+        .filter(
+          (item): item is { date: string; balance: number } =>
+            item !== null && item.balance > 0,
+        );
+
+      if (chartData.length === 0 && records.length > 0) {
+        const latestDate = records[records.length - 1].date;
+        chartData.push({
+          date: getMonthEndDate(latestDate).toISOString(),
+          balance: sumLatestPerWallet(records),
+        });
+      }
+      return chartData;
+    };
+
+    const weeklyChartData = buildGlobalChart(weeklyPeriods);
+    const monthlyChartData = buildGlobalChart(monthlyPeriods);
+
+    const distribution = wallets.map((wallet, index) => {
+      const latest = wallet.records[wallet.records.length - 1];
+      return {
+        name: wallet.name,
+        value: latest ? Number(decrypt(latest.amount, key)) : 0,
+        fill: COLORS[index % COLORS.length],
+      };
+    });
 
     return {
-      changePercent: Math.round(changePercent * 10) / 10,
-      direction,
+      wallets: wallets.map((wallet) => {
+        const latest = wallet.records[wallet.records.length - 1];
+        return {
+          id: wallet.id,
+          name: wallet.name,
+          category: {
+            id: wallet.category.id,
+            name: wallet.category.name,
+            type: wallet.category.type,
+            color: wallet.category.color,
+          },
+          currentBalance: latest ? Number(decrypt(latest.amount, key)) : 0,
+          recordCount: wallet.records.length,
+        };
+      }),
+      totalBalance,
+      hotMoney,
+      walletCount,
+      recordCount,
+      comparison: compareToLastMonth(records),
+      hotMoneyComparison: compareToLastMonth(hotRecords),
+      weeklyChartData,
+      monthlyChartData,
+      distribution,
     };
   }),
 });
