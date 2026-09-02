@@ -45,6 +45,11 @@ export function WalletList() {
       return sort === "asc" ? diff : -diff;
     });
 
+  const filteredTotal = filtered.reduce(
+    (sum, w) => sum + (w.currentBalance ?? 0),
+    0,
+  );
+
   const addWalletButton = (
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
       <DialogTrigger asChild>
@@ -136,6 +141,17 @@ export function WalletList() {
               </Item>
             ))}
           </ItemGroup>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-between rounded-md border bg-muted/50 px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              Total ({filtered.length})
+            </span>
+            <span className="font-mono text-sm text-emerald-500 font-semibold">
+              {formatCurrency(filteredTotal)}
+            </span>
+          </div>
         )}
       </div>
 
