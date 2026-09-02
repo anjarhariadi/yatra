@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     ],
     localPatterns: [
       {
-        pathname: "/public_data/**",
+        pathname: "/api/files/**",
       },
     ],
   },
