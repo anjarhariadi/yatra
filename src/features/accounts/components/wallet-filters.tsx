@@ -128,7 +128,7 @@ export function WalletFiltersSheet() {
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
         </SheetHeader>
-        <div className="mx-auto max-w-md pb-6">
+        <div className=" p-4">
           <WalletFilters />
         </div>
       </SheetContent>
