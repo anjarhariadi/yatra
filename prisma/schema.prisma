@@ -20,6 +20,7 @@ model Category {
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   type      CategoryType
+  color     String       @default("chart-1")
   isDefault Boolean      @default(false)
 
   wallets   Wallet[]

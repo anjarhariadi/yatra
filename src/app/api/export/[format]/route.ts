@@ -57,6 +57,7 @@ export async function GET(
           id: c.id,
           name: c.name,
           type: c.type,
+          color: c.color,
           isDefault: c.isDefault,
           createdAt: c.createdAt.toISOString(),
         })),

@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import { createTRPCRouter, protectedProcedure } from '../trpc'
-import { categorySchema } from '@/features/categories/validation'
-import { TRPCError } from '@trpc/server'
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { categorySchema } from "@/features/categories/validation";
+import { TRPCError } from "@trpc/server";
 
 export const categoriesRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -16,16 +16,14 @@ export const categoriesRouter = createTRPCRouter({
           },
         },
       },
-      orderBy: [
-        { type: 'asc' },
-        { name: 'asc' },
-      ],
-    })
+      orderBy: [{ type: "asc" }, { name: "asc" }],
+    });
 
     return categories.map((category) => ({
       id: category.id,
       name: category.name,
       type: category.type,
+      color: category.color,
       isDefault: category.isDefault,
       userId: category.userId,
       createdAt: category.createdAt.toISOString(),
@@ -33,7 +31,7 @@ export const categoriesRouter = createTRPCRouter({
       _count: {
         wallets: category._count.wallets,
       },
-    }))
+    }));
   }),
 
   getById: protectedProcedure
@@ -51,19 +49,20 @@ export const categoriesRouter = createTRPCRouter({
             },
           },
         },
-      })
+      });
 
       if (!category) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Category not found',
-        })
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
 
       return {
         id: category.id,
         name: category.name,
         type: category.type,
+        color: category.color,
         isDefault: category.isDefault,
         userId: category.userId,
         createdAt: category.createdAt.toISOString(),
@@ -71,7 +70,7 @@ export const categoriesRouter = createTRPCRouter({
         _count: {
           wallets: category._count.wallets,
         },
-      }
+      };
     }),
 
   create: protectedProcedure
@@ -82,33 +81,35 @@ export const categoriesRouter = createTRPCRouter({
           name: input.name,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (existing) {
         throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Category with this name already exists',
-        })
+          code: "CONFLICT",
+          message: "Category with this name already exists",
+        });
       }
 
       const category = await ctx.db.category.create({
         data: {
           name: input.name,
           type: input.type,
+          color: input.color,
           userId: ctx.user!.id,
           isDefault: false,
         },
-      })
+      });
 
       return {
         id: category.id,
         name: category.name,
         type: category.type,
+        color: category.color,
         isDefault: category.isDefault,
         userId: category.userId,
         createdAt: category.createdAt.toISOString(),
         updatedAt: category.updatedAt.toISOString(),
-      }
+      };
     }),
 
   update: protectedProcedure
@@ -116,7 +117,7 @@ export const categoriesRouter = createTRPCRouter({
       z.object({
         id: z.string(),
         data: categorySchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.category.findFirst({
@@ -124,20 +125,23 @@ export const categoriesRouter = createTRPCRouter({
           id: input.id,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (!existing) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Category not found',
-        })
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
 
-      if (existing.isDefault) {
+      if (
+        existing.isDefault &&
+        (input.data.name !== undefined || input.data.type !== undefined)
+      ) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot modify default category',
-        })
+          code: "FORBIDDEN",
+          message: "Cannot modify default category",
+        });
       }
 
       if (input.data.name && input.data.name !== existing.name) {
@@ -149,13 +153,13 @@ export const categoriesRouter = createTRPCRouter({
               id: input.id,
             },
           },
-        })
+        });
 
         if (duplicate) {
           throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Category with this name already exists',
-          })
+            code: "CONFLICT",
+            message: "Category with this name already exists",
+          });
         }
       }
 
@@ -166,18 +170,20 @@ export const categoriesRouter = createTRPCRouter({
         data: {
           name: input.data.name,
           type: input.data.type,
+          color: input.data.color,
         },
-      })
+      });
 
       return {
         id: category.id,
         name: category.name,
         type: category.type,
+        color: category.color,
         isDefault: category.isDefault,
         userId: category.userId,
         createdAt: category.createdAt.toISOString(),
         updatedAt: category.updatedAt.toISOString(),
-      }
+      };
     }),
 
   delete: protectedProcedure
@@ -188,41 +194,41 @@ export const categoriesRouter = createTRPCRouter({
           id: input.id,
           userId: ctx.user!.id,
         },
-      })
+      });
 
       if (!existing) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Category not found',
-        })
+          code: "NOT_FOUND",
+          message: "Category not found",
+        });
       }
 
       if (existing.isDefault) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Cannot delete default category',
-        })
+          code: "FORBIDDEN",
+          message: "Cannot delete default category",
+        });
       }
 
       const walletCount = await ctx.db.wallet.count({
         where: {
           categoryId: input.id,
         },
-      })
+      });
 
       if (walletCount > 0) {
         throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message: 'Cannot delete category with associated wallets',
-        })
+          code: "PRECONDITION_FAILED",
+          message: "Cannot delete category with associated wallets",
+        });
       }
 
       await ctx.db.category.delete({
         where: {
           id: input.id,
         },
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     }),
-})
+});

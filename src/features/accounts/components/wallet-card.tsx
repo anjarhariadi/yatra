@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { categoryBadgeStyle } from "@/features/categories/validation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
@@ -9,7 +10,7 @@ interface WalletCardProps {
     name: string;
     notes: string | null;
     imageUrl: string | null;
-    category: { name: string };
+    category: { name: string; color: string };
     currentBalance?: number;
   };
 }
@@ -39,7 +40,10 @@ export function WalletCard({ wallet }: WalletCardProps) {
               )}
               <CardTitle className="text-lg">{wallet.name}</CardTitle>
             </div>
-            <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
+            <span
+              className="text-xs px-2 py-1 rounded-full border"
+              style={categoryBadgeStyle(wallet.category.color)}
+            >
               {wallet.category.name}
             </span>
           </div>

@@ -29,6 +29,7 @@ export type CategoryMinAggregateOutputType = {
   userId: string | null
   name: string | null
   type: $Enums.CategoryType | null
+  color: string | null
   isDefault: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -39,6 +40,7 @@ export type CategoryMaxAggregateOutputType = {
   userId: string | null
   name: string | null
   type: $Enums.CategoryType | null
+  color: string | null
   isDefault: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -49,6 +51,7 @@ export type CategoryCountAggregateOutputType = {
   userId: number
   name: number
   type: number
+  color: number
   isDefault: number
   createdAt: number
   updatedAt: number
@@ -61,6 +64,7 @@ export type CategoryMinAggregateInputType = {
   userId?: true
   name?: true
   type?: true
+  color?: true
   isDefault?: true
   createdAt?: true
   updatedAt?: true
@@ -71,6 +75,7 @@ export type CategoryMaxAggregateInputType = {
   userId?: true
   name?: true
   type?: true
+  color?: true
   isDefault?: true
   createdAt?: true
   updatedAt?: true
@@ -81,6 +86,7 @@ export type CategoryCountAggregateInputType = {
   userId?: true
   name?: true
   type?: true
+  color?: true
   isDefault?: true
   createdAt?: true
   updatedAt?: true
@@ -164,6 +170,7 @@ export type CategoryGroupByOutputType = {
   userId: string
   name: string
   type: $Enums.CategoryType
+  color: string
   isDefault: boolean
   createdAt: Date
   updatedAt: Date
@@ -195,6 +202,7 @@ export type CategoryWhereInput = {
   userId?: Prisma.StringFilter<"Category"> | string
   name?: Prisma.StringFilter<"Category"> | string
   type?: Prisma.EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
+  color?: Prisma.StringFilter<"Category"> | string
   isDefault?: Prisma.BoolFilter<"Category"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Category"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Category"> | Date | string
@@ -207,6 +215,7 @@ export type CategoryOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  color?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -223,6 +232,7 @@ export type CategoryWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringFilter<"Category"> | string
   name?: Prisma.StringFilter<"Category"> | string
   type?: Prisma.EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
+  color?: Prisma.StringFilter<"Category"> | string
   isDefault?: Prisma.BoolFilter<"Category"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Category"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Category"> | Date | string
@@ -235,6 +245,7 @@ export type CategoryOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  color?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -251,6 +262,7 @@ export type CategoryScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"Category"> | string
   name?: Prisma.StringWithAggregatesFilter<"Category"> | string
   type?: Prisma.EnumCategoryTypeWithAggregatesFilter<"Category"> | $Enums.CategoryType
+  color?: Prisma.StringWithAggregatesFilter<"Category"> | string
   isDefault?: Prisma.BoolWithAggregatesFilter<"Category"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Category"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Category"> | Date | string
@@ -260,6 +272,7 @@ export type CategoryCreateInput = {
   id?: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -272,6 +285,7 @@ export type CategoryUncheckedCreateInput = {
   userId: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -282,6 +296,7 @@ export type CategoryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -294,6 +309,7 @@ export type CategoryUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -305,6 +321,7 @@ export type CategoryCreateManyInput = {
   userId: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -314,6 +331,7 @@ export type CategoryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -324,6 +342,7 @@ export type CategoryUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -339,6 +358,7 @@ export type CategoryCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  color?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -349,6 +369,7 @@ export type CategoryMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  color?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -359,6 +380,7 @@ export type CategoryMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  color?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -455,6 +477,7 @@ export type CategoryCreateWithoutWalletsInput = {
   id?: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -466,6 +489,7 @@ export type CategoryUncheckedCreateWithoutWalletsInput = {
   userId: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -491,6 +515,7 @@ export type CategoryUpdateWithoutWalletsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -502,6 +527,7 @@ export type CategoryUncheckedUpdateWithoutWalletsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -511,6 +537,7 @@ export type CategoryCreateWithoutUserInput = {
   id?: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -521,6 +548,7 @@ export type CategoryUncheckedCreateWithoutUserInput = {
   id?: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -561,6 +589,7 @@ export type CategoryScalarWhereInput = {
   userId?: Prisma.StringFilter<"Category"> | string
   name?: Prisma.StringFilter<"Category"> | string
   type?: Prisma.EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
+  color?: Prisma.StringFilter<"Category"> | string
   isDefault?: Prisma.BoolFilter<"Category"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Category"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Category"> | Date | string
@@ -570,6 +599,7 @@ export type CategoryCreateManyUserInput = {
   id?: string
   name: string
   type: $Enums.CategoryType
+  color?: string
   isDefault?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -579,6 +609,7 @@ export type CategoryUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -589,6 +620,7 @@ export type CategoryUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -599,6 +631,7 @@ export type CategoryUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
+  color?: Prisma.StringFieldUpdateOperationsInput | string
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -640,6 +673,7 @@ export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   userId?: boolean
   name?: boolean
   type?: boolean
+  color?: boolean
   isDefault?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -653,6 +687,7 @@ export type CategorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   userId?: boolean
   name?: boolean
   type?: boolean
+  color?: boolean
   isDefault?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -664,6 +699,7 @@ export type CategorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   userId?: boolean
   name?: boolean
   type?: boolean
+  color?: boolean
   isDefault?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -675,12 +711,13 @@ export type CategorySelectScalar = {
   userId?: boolean
   name?: boolean
   type?: boolean
+  color?: boolean
   isDefault?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type CategoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "type" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["category"]>
+export type CategoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "type" | "color" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["category"]>
 export type CategoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   wallets?: boolean | Prisma.Category$walletsArgs<ExtArgs>
@@ -704,6 +741,7 @@ export type $CategoryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     userId: string
     name: string
     type: $Enums.CategoryType
+    color: string
     isDefault: boolean
     createdAt: Date
     updatedAt: Date
@@ -1136,6 +1174,7 @@ export interface CategoryFieldRefs {
   readonly userId: Prisma.FieldRef<"Category", 'String'>
   readonly name: Prisma.FieldRef<"Category", 'String'>
   readonly type: Prisma.FieldRef<"Category", 'CategoryType'>
+  readonly color: Prisma.FieldRef<"Category", 'String'>
   readonly isDefault: Prisma.FieldRef<"Category", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Category", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Category", 'DateTime'>

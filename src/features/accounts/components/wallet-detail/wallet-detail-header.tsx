@@ -1,6 +1,7 @@
 import { Pencil, Trash2, Plus } from "lucide-react";
 import Image from "next/image";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { categoryBadgeStyle } from "@/features/categories/validation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ interface WalletCategory {
   id: string;
   name: string;
   type: string;
+  color: string;
   isDefault: boolean;
   userId: string;
   createdAt: string;
@@ -64,7 +66,10 @@ export function WalletDetailHeader({
           )}
           <div>
             <h1 className="text-2xl font-bold">{wallet.name}</h1>
-            <span className="text-sm px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
+            <span
+              className="text-sm px-2 py-1 rounded-full border"
+              style={categoryBadgeStyle(wallet.category.color)}
+            >
               {wallet.category.name}
             </span>
           </div>

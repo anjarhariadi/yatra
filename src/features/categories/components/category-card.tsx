@@ -1,30 +1,46 @@
-import { Pencil, Trash2 } from 'lucide-react'
-import { CATEGORY_TYPE_LABELS, type CategoryType } from '../validation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Pencil, Trash2 } from "lucide-react";
+import {
+  CATEGORY_TYPE_LABELS,
+  categoryColorVar,
+  type CategoryType,
+} from "../validation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CategoryCardProps {
   category: {
-    id: string
-    name: string
-    type: CategoryType
-    isDefault: boolean
-    _count?: { wallets: number }
-  }
-  onDelete: (id: string) => void
-  onEdit: (id: string) => void
-  isDeleting?: boolean
+    id: string;
+    name: string;
+    type: CategoryType;
+    color: string;
+    isDefault: boolean;
+    _count?: { wallets: number };
+  };
+  onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
+  isDeleting?: boolean;
 }
 
-export function CategoryCard({ category, onDelete, onEdit, isDeleting }: CategoryCardProps) {
-  const walletCount = category._count?.wallets ?? 0
-  const canDelete = !category.isDefault && walletCount === 0
+export function CategoryCard({
+  category,
+  onDelete,
+  onEdit,
+  isDeleting,
+}: CategoryCardProps) {
+  const walletCount = category._count?.wallets ?? 0;
+  const canDelete = !category.isDefault && walletCount === 0;
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">{category.name}</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span
+              className="inline-block h-3 w-3 rounded-full shrink-0"
+              style={{ backgroundColor: categoryColorVar(category.color) }}
+            />
+            {category.name}
+          </CardTitle>
           <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
             {CATEGORY_TYPE_LABELS[category.type]}
           </span>
@@ -32,14 +48,18 @@ export function CategoryCard({ category, onDelete, onEdit, isDeleting }: Categor
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {walletCount} wallet{walletCount !== 1 ? 's' : ''}
+          {walletCount} wallet{walletCount !== 1 ? "s" : ""}
         </p>
         {category.isDefault && (
           <p className="text-xs text-muted-foreground mt-2">Default category</p>
         )}
         <div className="flex gap-2 mt-4">
           {!category.isDefault && (
-            <Button variant="outline" size="sm" onClick={() => onEdit(category.id)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(category.id)}
+            >
               <Pencil className="h-4 w-4 mr-1" />
               Edit
             </Button>
@@ -52,11 +72,11 @@ export function CategoryCard({ category, onDelete, onEdit, isDeleting }: Categor
               disabled={isDeleting}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

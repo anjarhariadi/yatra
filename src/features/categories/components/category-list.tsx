@@ -1,65 +1,65 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { CategoryCard } from './category-card'
-import { CategoryForm } from './category-form'
-import { CategoryEditForm } from './category-edit-form'
-import { trpc } from '@/lib/trpc/client'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { CategoryCard } from "./category-card";
+import { CategoryForm } from "./category-form";
+import { CategoryEditForm } from "./category-edit-form";
+import { trpc } from "@/lib/trpc/client";
 
 export function CategoryList() {
-  const router = useRouter()
-  const utils = trpc.useUtils()
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [createOpen, setCreateOpen] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
+  const router = useRouter();
+  const utils = trpc.useUtils();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const { data: categories, isLoading } = trpc.categories.getAll.useQuery()
+  const { data: categories, isLoading } = trpc.categories.getAll.useQuery();
 
   const deleteMutation = trpc.categories.delete.useMutation({
     onSuccess: () => {
-      toast.success('Category deleted successfully')
-      utils.categories.getAll.invalidate()
-      router.refresh()
+      toast.success("Category deleted successfully");
+      utils.categories.getAll.invalidate();
+      router.refresh();
     },
     onError: (error) => {
-      toast.error(error.message || 'Failed to delete category')
+      toast.error(error.message || "Failed to delete category");
     },
-  })
+  });
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) {
-      return
+    if (!confirm("Are you sure you want to delete this category?")) {
+      return;
     }
 
-    setDeletingId(id)
+    setDeletingId(id);
     try {
-      await deleteMutation.mutateAsync({ id })
+      await deleteMutation.mutateAsync({ id });
     } catch {
       // Error handled in onError
     } finally {
-      setDeletingId(null)
+      setDeletingId(null);
     }
-  }
+  };
 
   const handleEdit = (id: string) => {
-    setEditId(id)
-  }
+    setEditId(id);
+  };
 
   const handleEditSuccess = () => {
-    setEditId(null)
-    router.refresh()
-  }
+    setEditId(null);
+    router.refresh();
+  };
 
   if (isLoading) {
     return (
@@ -69,13 +69,16 @@ export function CategoryList() {
             <div className="h-6 w-32 bg-muted animate-pulse mb-4 rounded" />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2].map((j) => (
-                <div key={j} className="h-32 bg-muted animate-pulse rounded-lg" />
+                <div
+                  key={j}
+                  className="h-32 bg-muted animate-pulse rounded-lg"
+                />
               ))}
             </div>
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (!categories || categories.length === 0) {
@@ -99,22 +102,25 @@ export function CategoryList() {
           No categories yet. Create one to get started.
         </p>
       </div>
-    )
+    );
   }
 
-  const groupedCategories = categories.reduce((acc, category) => {
-    if (!acc[category.type]) {
-      acc[category.type] = []
-    }
-    acc[category.type].push(category)
-    return acc
-  }, {} as Record<string, typeof categories>)
+  const groupedCategories = categories.reduce(
+    (acc, category) => {
+      if (!acc[category.type]) {
+        acc[category.type] = [];
+      }
+      acc[category.type].push(category);
+      return acc;
+    },
+    {} as Record<string, typeof categories>,
+  );
 
   const typeLabels: Record<string, string> = {
-    IDLE_CASH: 'Idle Cash',
-    HOT_CASH: 'Hot Cash',
-    EMERGENCY_FUND: 'Emergency Fund',
-  }
+    IDLE_CASH: "Idle Cash",
+    HOT_CASH: "Hot Cash",
+    EMERGENCY_FUND: "Emergency Fund",
+  };
 
   return (
     <>
@@ -159,9 +165,11 @@ export function CategoryList() {
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
           </DialogHeader>
-          {editId && <CategoryEditForm id={editId} onSuccess={handleEditSuccess} />}
+          {editId && (
+            <CategoryEditForm id={editId} onSuccess={handleEditSuccess} />
+          )}
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

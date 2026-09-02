@@ -9,6 +9,7 @@ import {
   type CategoryInput,
 } from "../validation";
 import { CATEGORY_TYPE_LABELS } from "../validation";
+import { CategoryColorPicker } from "./category-color-picker";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export function CategoryForm({ onSuccess }: CategoryFormProps) {
     defaultValues: {
       name: "",
       type: "HOT_CASH",
+      color: "chart-1",
     },
   });
 
@@ -92,6 +94,20 @@ export function CategoryForm({ onSuccess }: CategoryFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="color"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <CategoryColorPicker
+              value={field.value}
+              onChange={field.onChange}
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}

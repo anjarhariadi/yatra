@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { categorySchema, type CategoryInput } from "../validation";
 import { CATEGORY_TYPE_LABELS, type CategoryType } from "../validation";
+import { CategoryColorPicker } from "./category-color-picker";
+import type { CategoryColor } from "../validation";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +52,7 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
       ? {
           name: category.name,
           type: category.type,
+          color: category.color as CategoryColor,
         }
       : undefined,
   });
@@ -114,6 +117,20 @@ export function CategoryEditForm({ id, onSuccess }: CategoryEditFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="color"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <CategoryColorPicker
+              value={field.value}
+              onChange={field.onChange}
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
