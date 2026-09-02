@@ -1,29 +1,26 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { trpc } from "@/lib/trpc/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { formatCurrency } from "@/lib/utils"
-import { LineChartComponent, PieChartComponent } from "@/components/charts"
+import { useState } from "react";
+import { trpc } from "@/lib/trpc/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCurrency } from "@/lib/utils";
+import { LineChartComponent, PieChartComponent } from "@/components/charts";
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState<"weekly" | "monthly">("monthly")
+  const [period, setPeriod] = useState<"weekly" | "monthly">("monthly");
 
-  const { data: wallets, isLoading } = trpc.accounts.getAll.useQuery()
+  const { data: wallets, isLoading } = trpc.accounts.getAll.useQuery();
   const { data: globalChartData, isLoading: globalChartLoading } =
-    trpc.charts.getGlobalChartData.useQuery({ period })
+    trpc.charts.getGlobalChartData.useQuery({ period });
   const { data: walletDistribution, isLoading: distributionLoading } =
-    trpc.charts.getWalletDistribution.useQuery()
+    trpc.charts.getWalletDistribution.useQuery();
 
-  const totalBalance = wallets?.reduce((sum, w) => sum + (w.currentBalance ?? 0), 0) ?? 0
-  const walletCount = wallets?.length ?? 0
-  const recordCount = wallets?.reduce((sum, w) => sum + (w._count?.records ?? 0), 0) ?? 0
+  const totalBalance =
+    wallets?.reduce((sum, w) => sum + (w.currentBalance ?? 0), 0) ?? 0;
+  const walletCount = wallets?.length ?? 0;
+  const recordCount =
+    wallets?.reduce((sum, w) => sum + (w._count?.records ?? 0), 0) ?? 0;
 
   if (isLoading) {
     return (
@@ -41,7 +38,7 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -52,7 +49,9 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(totalBalance)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -79,21 +78,24 @@ export default function DashboardPage() {
             <CardTitle>Balance Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={period} onValueChange={(v) => setPeriod(v as "weekly" | "monthly")}>
+            <Tabs
+              value={period}
+              onValueChange={(v) => setPeriod(v as "weekly" | "monthly")}
+            >
               <TabsList>
                 <TabsTrigger value="weekly">Weekly</TabsTrigger>
                 <TabsTrigger value="monthly">Monthly</TabsTrigger>
               </TabsList>
               <TabsContent value="weekly" className="mt-4">
                 {globalChartLoading ? (
-                  <div className="h-[150px] bg-muted animate-pulse rounded" />
+                  <div className="h-37.5 bg-muted animate-pulse rounded" />
                 ) : (
                   <LineChartComponent data={globalChartData || []} />
                 )}
               </TabsContent>
               <TabsContent value="monthly" className="mt-4">
                 {globalChartLoading ? (
-                  <div className="h-[150px] bg-muted animate-pulse rounded" />
+                  <div className="h-37.5 bg-muted animate-pulse rounded" />
                 ) : (
                   <LineChartComponent data={globalChartData || []} />
                 )}
@@ -108,7 +110,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {distributionLoading ? (
-              <div className="h-[150px] bg-muted animate-pulse rounded" />
+              <div className="h-37.5 bg-muted animate-pulse rounded" />
             ) : (
               <PieChartComponent data={walletDistribution || []} />
             )}
@@ -116,5 +118,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
